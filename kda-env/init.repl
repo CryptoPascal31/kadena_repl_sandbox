@@ -1,0 +1,21 @@
+(enforce-pact-version "4.4")
+
+;Init basic guard contract (needed to init namespaces)
+(begin-tx)
+(load "bootstrap-modules/basic-guards.pact")
+(commit-tx)
+
+; Init Namespaces
+(load "init-namespaces.repl")
+
+; Init standards Kadena contracts (coin, etc...)
+(load "init-kadena.repl")
+
+; Util lib
+(load "init-pact-util-lib.repl")
+
+;Marmelade
+(load "init-marmalade.repl")
+
+;Init test accounts
+(load "init-test-accounts.repl")

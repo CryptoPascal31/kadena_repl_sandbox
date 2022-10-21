@@ -1,0 +1,12 @@
+
+(begin-tx)
+
+(use basic-guards)
+(define-namespace 'util GUARD_SUCCESS GUARD_SUCCESS)
+(define-namespace 'free GUARD_SUCCESS GUARD_SUCCESS)
+(define-namespace 'kip GUARD_SUCCESS GUARD_SUCCESS)
+(define-namespace 'user GUARD_SUCCESS GUARD_SUCCESS)
+(define-namespace 'marmalade GUARD_SUCCESS GUARD_SUCCESS)
+
+(print "Standard namespaces initialized")
+(commit-tx)

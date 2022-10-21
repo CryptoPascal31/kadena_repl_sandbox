@@ -1,0 +1,15 @@
+(begin-tx)
+(namespace 'free)
+(load "pact-util-lib/util-lists.pact")
+(load "pact-util-lib/util-strings.pact")
+(load "pact-util-lib/util-math.pact")
+(load "pact-util-lib/util-random.pact")
+
+(create-table state-table)
+
+(env-hash (hash "GOOD SEED!"))
+(util-random.reset-state)
+
+(commit-tx)
+
+(print "Utils library contracts initialized")

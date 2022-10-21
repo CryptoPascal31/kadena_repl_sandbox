@@ -1,0 +1,19 @@
+(begin-tx)
+(namespace 'kip)
+
+;Manifest HFT Module
+(load "./marmalade/manifest.pact")
+
+; Load interfaces
+(load "./marmalade/token-policy-v1.pact")
+(load "./marmalade/poly-fungible-v2.pact")
+
+(env-data {'ns:'marmalade, 'upgrade:false})
+(load "./marmalade/ledger.pact")
+(load "./marmalade/policy.pact")
+(load "./marmalade/fixed-quote-policy.pact")
+(load "./marmalade/fixed-quote-royalty-policy.pact")
+
+(commit-tx)
+
+(print "Marmalade contracts initialized")

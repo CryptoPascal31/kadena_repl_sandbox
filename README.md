@@ -1,1 +1,88 @@
-# kadena_repl_sandbox
+# Sandbox for Kadena REPL
+
+## Introduction
+
+This package helps to create a "Plug & Play" sandbox for easy development of Pact Smart Contracts off-chain, with all standards contracts preloaded and ready.
+
+The goal is to simulate the Kadena environment as it can be found on-chain:
+
+ * Namespaces
+ * Coin-contract and fungible-v2 interfaces
+ * Official Kadena utilities
+ * Third party utilities
+ * Marmalade interfaces and contracts
+
+## How-to
+
+1. Make sure that the Pact interpreter in installed.
+  - https://github.com/kadena-io/pact/releases
+2. Create your REPL file which:
+  - load the main sandbox script `kda-env/init.repl`: `(load "kda-env/init.repl")`
+  - declare or load and test your contracts
+3. Optionally, you can comment some lines in `init.repl` to disable some features.
+4. Launch your REPL file with the pact executable.
+
+An example can be found: `example.repl` and `example.pact` and can be launched:
+```
+$ pact example.repl
+Standard namespaces initialized
+Kadena contracts initialized
+Utils library contracts initialized
+Marmalade contracts initialized
+Hello bob: You have currently 1000.0 KDA
+Load successful
+```
+
+## Description
+
+### Pact
+Based on Pact 4.4, and currently on-chains contracts (10/21/2022)
+
+### Bootstrap modules
+
+**basic-guards**: Implements two simple guards (used to initialize the namespaces):
+ GUARD_SUCCESS and GUARD_FAILURE
+
+**repl-coin-tools**: Implements 2 functions to create and mint coin accounts.`(env-enable-repl-natives)` must be enabled to make this module work.
+
+### Namespaces
+The following namespaces are created:
+  - util
+  - free
+  - kip
+  - user
+  - marmalade
+
+There is no enabled policy, and the module `ns` is not loaded.
+There is no guard on the namespaces.
+
+### Fungible-v2 and coin
+The coin contract v5 is installed.
+
+The followings accounts are pre-funded for test purpose:
+
+| Account | Key       |  Balance |
+|---------|-----------|----------|
+| alice   | alice-key | 1000.0   |
+| bob     | bob-key   | 1000.0   |
+| carol   | carol-key | 1000.0   |
+| dave    | dave-key  | 1000.0   |
+
+If you need more accounts, you can create a new ones with `(repl-coin-tools.fund-account name key-name balance)`
+
+
+### Marmalade
+The version RC1 of marmalade is installed:
+- https://github.com/kadena-io/marmalade/releases/tag/marmalade-rc1
+
+Contracts:
+- poly-fungible-v2 and token-policy-v1 interfaces in NS `kip`
+- manifest contract in NS `kip`
+- ledger in NS `marmalade`
+- 3 default policy contracts in NS `marmalade`
+
+
+### Pact Util library
+The version 0.2 of unofficial Pact Util library:
+- https://github.com/CryptoPascal31/pact-util-lib
+- https://pact-util-lib.readthedocs.io/en/beta_0.2/

@@ -1,0 +1,27 @@
+(begin-tx)
+(env-keys [])
+(env-data {})
+(env-sigs [])
+
+; Root namespace
+(load "./kadena/fungible-v2.pact")
+(load "./kadena/fungible-xchain-v1.pact")+
+(load "./kadena/gas-payer-v1.pact")
+(load "./kadena/coin-v5.pact")
+(create-table coin-table)
+
+; On the Kadena blockchain the guards modules are loaded
+;in both root and util namespaces
+(load "./kadena/guards.pact")
+(load "./kadena/guards1.pact")
+
+(namespace 'kip)
+(load "./kadena/account-protocols-v1.pact")
+
+(namespace 'util)
+(load "./kadena/fungible-util.pact")
+(load "./kadena/guards.pact")
+(load "./kadena/guards1.pact")
+
+(print "Kadena contracts initialized")
+(commit-tx)

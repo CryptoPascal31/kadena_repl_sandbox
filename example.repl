@@ -1,0 +1,14 @@
+;; Load the environment
+(load "kda-env/init.repl")
+
+; Load my module
+(begin-tx)
+(namespace 'free)
+(load "example.pact")
+(commit-tx)
+
+; Test the module
+(use free.util-strings)
+(print (free.hello.say-hello "bob"))
+(expect "Result should start with Hello" true (starts-with (free.hello.say-hello "bob") "Hello"))
+(expect "Result should end with KDA" true (ends-with (free.hello.say-hello "bob") "KDA"))
