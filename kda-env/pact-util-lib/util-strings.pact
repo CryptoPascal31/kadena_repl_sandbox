@@ -18,7 +18,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.2")
+  (defconst VERSION:string "0.3")
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
 
@@ -128,6 +128,15 @@
   (defun char-at:string (idx:integer in:string)
     "Returns the character at position idx"
     (at idx (str-to-list in))
+  )
+
+  (defun slice(low-idx:integer high-idx:integer in:string)
+    "Returns the substring between the two indexes, high-idx char is non included"
+    (enforce (< low-idx high-idx) "Low index must be < to High index")
+    (enforce (>= low-idx 0) "Indexes must be positive")
+    (enforce (<= high-idx (length in)) "High index must be <= to string length")
+    (let ((out-len (- high-idx low-idx)))
+      (take out-len (drop low-idx in)))
   )
 
   (defun join:string (separator:string in:[string])

@@ -22,13 +22,15 @@
   "This module provides pseudo-random numbers/string generation \
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
-  (defconst VERSION:string "0.2")
+  (defconst VERSION:string "0.3")
 
   (bless "RBfxKPExaz5q6i64FLA_k7UVM9MaOO0UDJulfPFZBRA")
+  (bless "I-yq-JDWu9Lpag6SJgkWbDtsaZ21k4YqOyA09uzSnuY")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
 
+  (use util-lists [enforce-not-empty])
   (use util-strings [join])
   (use util-math [pow10])
 
@@ -83,6 +85,27 @@
            (substrings (map (lambda (x) (hash (+ rnd x))) (enumerate 1 cnt))))
       (take len (concat substrings)))
   )
+
+  (defun random-choice (choices-list:list)
+    "Returns a random element from the non-empty list"
+    (enforce-not-empty choices-list)
+    (let* ((max-idx (- (length choices-list) 1 ))
+           (idx (random-int-range 0 max-idx)))
+      (at idx choices-list))
+  )
+
+  (defun shuffle (in:list)
+    "Shuffle a list"
+    (let* ((seed (random-int))
+           (idx-to-rnd (lambda (x) (str-to-int 64 (hash (+ x seed)))))
+           (assign-order (lambda (x i) {'order:i, 'val:x })))
+      (map (at 'val)
+           (sort ['order]
+                 (zip (assign-order)
+                       in
+                       (map (idx-to-rnd) (enumerate 0 (length in )))))))
+  )
+
 
   (defun gen-uuid-rfc-4122-v4:string ()
     "Generate an UUID (Universal Unique ID) according to RFC 4122 v4"

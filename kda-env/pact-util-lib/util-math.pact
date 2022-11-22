@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.2")
+  (defconst VERSION:string "0.3")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -157,6 +157,34 @@
         (if (> x 0.0)
             1.0
             -1.0)))
+
+  (defun gcd:integer (a:integer b:integer)
+    "Returns the greatest common divisor of 2 integers"
+    ; We use the euclidean iterative algorithm (optimized by modulo)
+    ; According to several sources and my own tests, the maximum complexity of the euclidean algorithm is
+    ; log/Phy ( min(a,b)). For safety, at then end, we check (enforce) at that the algorithm has ended (ie b=0)/
+    ; But that enforcement should never fail.
+
+    ; First let's abs a and b and order them
+    ; a* is the big, *b is the small
+    (let* ((a (abs a)) (b (abs b))
+           (a* (if (< a b) b a))
+           (b* (if (< a b) a b)))
+      (if (= b* 0) a* ; If one (or both) of the arguments is 0: return |a|
+          (let* ((max-iterations (ceiling (log GOLDEN-RATIO b*)))
+                 (gcd-inner (lambda (x i) (if (= (at 'b x) 0)
+                                              x
+                                              {'a: (at 'b x), 'b: (mod (at 'a x) (at 'b x))})))
+                 (gcd-result (fold (gcd-inner) {'a:a*, 'b:b*} (enumerate 1 max-iterations))))
+            (enforce (= (at 'b gcd-result) 0) "Euclidean algorithm not finished")
+            (at 'a gcd-result))))
+  )
+
+  (defun lcm:integer (a:integer b:integer)
+    "Returns the least common multiple of 2 integers"
+    (enforce (and (!= a 0) (!= b 0)) "Arguments can't be 0")
+    (/ (abs (* a b)) (gcd a b))
+  )
 
   (defun pow10:decimal (x:integer)
     "Returns 10^x, rounded to 12 decimals (rounding is important when x is negative)"
