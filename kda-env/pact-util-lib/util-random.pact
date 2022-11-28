@@ -9,11 +9,16 @@
 ; The random string is derived from Xn with the following formula
 ; S = HASH( [Xn + 1] ) + HASH ( [Xn + 2] ) + HASH ( [Xn + 3] ) + ..........
 ;
-; The result is hard (maybe impossible) to predict before mining since block-time includes microseconds.
+; The result is easy to predict. Even if block-time includes microseconds, block-time
+; is an exact copy of the creation-time of the previous block.
+; That's why a contract whose security would rely on that module would be highly exploitable.
+; An attacker just need to watch the current block, to predict what will be the generated numbers
+; in the next block.
 ;
-; Several numbers can be generated in the same block or transaction. They will be all different, unpredictable and uncorrelated
+; => DO NOT NOT NOT USE this PRBS generator for cryptographic or lottery purposes.
 ;
-; Be careful, the miner can control the generated numbers => Don't use for high stakes lottery or cryptography
+; Several numbers can be generated in the same block or transaction. They will be all different, and uncorrelated
+;
 ;
 ; Feel free to reuse, comment, review, fork, propose PRs, submit bugs:
 ; https://github.com/CryptoPascal31/pact-util-lib
