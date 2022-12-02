@@ -36,7 +36,7 @@ Load successful
 ## Description
 
 ### Pact
-Based on Pact 4.4, and currently on-chains contracts (10/21/2022)
+Based on Pact 4.4.1, and currently on-chains contracts (12/02/2022)
 
 ### Bootstrap modules
 
