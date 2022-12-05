@@ -50,6 +50,14 @@
     (enforce-not-empty in)
     (at (- (length in) 1) in))
 
+  (defun at* (in:list idx:integer default)
+    "Returns the element at idx, but returns default if the list is too short"
+    (enforce (>= idx 0) "Index cannot be negative")
+    (if (>= idx (length in))
+      default
+      (at idx in))
+  )
+
   (defun search:[integer] (in:list item)
     "Search an item into the list and returns a list of index"
     ; Save gas if item is not in list => use the native contains to return empty
