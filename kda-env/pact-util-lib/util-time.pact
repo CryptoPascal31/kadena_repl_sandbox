@@ -48,6 +48,17 @@
     (add-time (epoch) timestamp)
   )
 
+  ;; Compare functions
+  (defun earliest:time (time1:time time2:time)
+    "Returns the earliest time between time1 and time2"
+    (if (< time1 time2) time1 time2)
+  )
+
+  (defun latest:time (time1:time time2:time)
+    "Returns the lastest time betwwen time1 and time2"
+    (if (> time1 time2) time1 time2)
+  )
+
   ;; Block estimation function
   (defun est-height-at-time:integer (target-time:time)
     "Estimates the block height at a target-time"
