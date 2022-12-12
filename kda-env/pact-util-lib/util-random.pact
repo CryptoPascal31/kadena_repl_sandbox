@@ -9,11 +9,16 @@
 ; The random string is derived from Xn with the following formula
 ; S = HASH( [Xn + 1] ) + HASH ( [Xn + 2] ) + HASH ( [Xn + 3] ) + ..........
 ;
-; The result is hard (maybe impossible) to predict before mining since block-time includes microseconds.
+; The result is easy to predict. Even if block-time includes microseconds, block-time
+; is an exact copy of the creation-time of the previous block.
+; That's why a contract whose security would rely on that module would be highly exploitable.
+; An attacker just need to watch the current block, to predict what will be the generated numbers
+; in the next block.
 ;
-; Several numbers can be generated in the same block or transaction. They will be all different, unpredictable and uncorrelated
+; => DO NOT NOT NOT USE this PRBS generator for cryptographic or lottery purposes.
 ;
-; Be careful, the miner can control the generated numbers => Don't use for high stakes lottery or cryptography
+; Several numbers can be generated in the same block or transaction. They will be all different, and uncorrelated
+;
 ;
 ; Feel free to reuse, comment, review, fork, propose PRs, submit bugs:
 ; https://github.com/CryptoPascal31/pact-util-lib
@@ -22,10 +27,12 @@
   "This module provides pseudo-random numbers/string generation \
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
-  (defconst VERSION:string "0.3")
+
+  (defconst VERSION:string "0.4")
 
   (bless "RBfxKPExaz5q6i64FLA_k7UVM9MaOO0UDJulfPFZBRA")
   (bless "I-yq-JDWu9Lpag6SJgkWbDtsaZ21k4YqOyA09uzSnuY")
+  (bless "qSwrZYiS0ZR7fVcbIVrtC-f_ZB6n-Q-6JsTkn6zg2IQ")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))

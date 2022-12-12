@@ -1,0 +1,26 @@
+
+; Create a new module with the const "HELLO"
+(env-data {"c-value": "HELLO"})
+(module A GOV
+  (defcap GOV() true)
+
+  (defconst MY-CONST:string (read-string "c-value"))
+
+  (defun speak:string() MY-CONST)
+)
+
+(print (format "Module says {}" [(A.speak)] ))
+(print (format "Module hash is: {}" [(at 'hash (describe-module "A"))] ))
+
+; Upgrade the module with another constant
+(env-data {"c-value": "BYE BYE"})
+(module A GOV
+  (defcap GOV() true)
+
+  (defconst MY-CONST:string (read-string "c-value"))
+
+  (defun speak:string() MY-CONST)
+)
+
+(print (format "Module says {}" [(A.speak)] ))
+(print (format "Module hash is: {}" [(at 'hash (describe-module "A"))] ))

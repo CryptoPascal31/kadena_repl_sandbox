@@ -15,7 +15,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.3")
+  (defconst VERSION:string "0.4")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -50,6 +50,14 @@
     (enforce-not-empty in)
     (at (- (length in) 1) in))
 
+  (defun at* (in:list idx:integer default)
+    "Returns the element at idx, but returns default if the list is too short"
+    (enforce (>= idx 0) "Index cannot be negative")
+    (if (>= idx (length in))
+      default
+      (at idx in))
+  )
+
   (defun search:[integer] (in:list item)
     "Search an item into the list and returns a list of index"
     ; Save gas if item is not in list => use the native contains to return empty
@@ -65,6 +73,25 @@
   (defun count:integer (in:list item)
     "Returns the number of occurences of an item"
     (length (filter (= item) in))
+  )
+
+  ;; Creation and extension functions
+  (defun make-list-like (in:list value)
+    "Creates a new list whose size is the same as in, by repeating value"
+    (make-list (length in) value)
+  )
+
+  (defun extend (in:list new-length:integer value)
+    "Extends a list to new-length by repeating value"
+    (let ((missing-items (- new-length (length in))))
+      (if (<= missing-items 0)
+          in
+          (+ in (make-list missing-items value))))
+  )
+
+  (defun extend-like (in:list target:list value)
+    "Extends a list to the same length as target, by repeating value"
+    (extend in (length target) value)
   )
 
   ;; Insertion functions
@@ -84,6 +111,11 @@
             (drop idx in)])
   )
 
+  (defun insert-at*:list (in:list idx:integer item default)
+    "Insert an item at position idx, extends the list if it is too short using the default value"
+    (insert-at (extend in idx default) idx item)
+  )
+
   ;; Replacement functions
   (defun replace-first:list (in:list item)
     "Replace the first item of the list"
@@ -101,6 +133,11 @@
     (chain [(take idx in),
             [item],
             (drop (+ 1 idx) in)])
+  )
+
+  (defun replace-at*:list (in:list idx:integer item default)
+    "Replace an item at position idx, extends the list if it is too short using the default value"
+    (replace-at (extend in (+ idx 1) default) idx item)
   )
 
   (defun replace-item:list (in:list old-item new-item)
