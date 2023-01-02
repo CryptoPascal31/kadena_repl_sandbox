@@ -113,7 +113,6 @@
                        (map (idx-to-rnd) (enumerate 0 (length in )))))))
   )
 
-
   (defun gen-uuid-rfc-4122-v4:string ()
     "Generate an UUID (Universal Unique ID) according to RFC 4122 v4"
     (let* ((set-bits (lambda (x bits mask) (int-to-str 16 (| bits (& mask (str-to-int 16 x))))))
