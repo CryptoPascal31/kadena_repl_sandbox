@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.0")
+  (defconst VERSION:string "0.4")
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
 
@@ -57,6 +57,13 @@
   (defun latest:time (time1:time time2:time)
     "Returns the lastest time betwwen time1 and time2"
     (if (> time1 time2) time1 time2)
+  )
+
+  (defun time-between:bool (time1:time time2:time in:time)
+    "Returns true if in is between time1 and time2"
+    (let ((a (earliest time1 time2))
+          (b (latest time1 time2)))
+      (and? (<= a) (>= b) in))
   )
 
   ;; Block estimation function

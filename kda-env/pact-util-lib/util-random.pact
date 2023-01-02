@@ -27,10 +27,12 @@
   "This module provides pseudo-random numbers/string generation \
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
-  (defconst VERSION:string "0.3")
+
+  (defconst VERSION:string "0.4")
 
   (bless "RBfxKPExaz5q6i64FLA_k7UVM9MaOO0UDJulfPFZBRA")
   (bless "I-yq-JDWu9Lpag6SJgkWbDtsaZ21k4YqOyA09uzSnuY")
+  (bless "qSwrZYiS0ZR7fVcbIVrtC-f_ZB6n-Q-6JsTkn6zg2IQ")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
