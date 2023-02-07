@@ -2,12 +2,33 @@
 
 (begin-tx)
 (load "./bootstrap-modules/repl-coin-tools.pact")
+(load "./bootstrap-modules/repl-marmalade-tools.pact")
+(commit-tx)
+
+
+(begin-tx)
+(env-data {"init":true})
+(load "./test-policies/token-policy-transfer.pact")
 (commit-tx)
 
 
 (begin-tx)
 (use repl-coin-tools)
 (fund-accounts ["alice", "bob", "carol", "dave"] 1000.0)
+(commit-tx)
+
+
+(begin-tx)
+(use repl-marmalade-tools)
+(env-data {
+  "mint-guard": ["mint"],
+  "burn-guard": ["burn"],
+  "sale-guard": ["sale"],
+  "transfer-guard": ["transfer"]
+})
+(create-token "m-token" 0 "schema" "data" {"trait":"powerful"} free.token-policy-transfer)
+(env-keys ["mint"])
+(fund-accounts-with-token ["alice", "bob", "carol", "dave"] "m-token" 100.0)
 (commit-tx)
 
 (env-enable-repl-natives false)
