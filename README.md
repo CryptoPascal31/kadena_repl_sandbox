@@ -83,6 +83,6 @@ Contracts:
 
 
 ### Pact Util library
-The version 0.3 of unofficial Pact Util library:
+The version 0.5 of unofficial Pact Util library:
 - https://github.com/CryptoPascal31/pact-util-lib
-- https://pact-util-lib.readthedocs.io/en/beta_0.3/
+- https://pact-util-lib.readthedocs.io/en/beta_0.5/
