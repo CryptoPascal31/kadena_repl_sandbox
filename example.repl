@@ -1,4 +1,5 @@
 ;; Load the environment
+(env-data {"disable-marmalade":1})
 (load "kda-env/init.repl")
 
 ; Load my module

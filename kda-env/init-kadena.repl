@@ -1,6 +1,5 @@
 (begin-tx)
 (env-keys [])
-(env-data {})
 (env-sigs [])
 
 ; Root namespace

@@ -19,7 +19,7 @@ The goal is to simulate the Kadena environment as it can be found on-chain:
 2. Create your REPL file which:
   - load the main sandbox script `kda-env/init.repl`: `(load "kda-env/init.repl")`
   - declare or load and test your contracts
-3. Optionally, you can comment some lines in `init.repl` to disable some features.
+3. Optionally, you can disable some features by setting user data before loading `init.repl`
 4. Launch your REPL file with the pact executable.
 
 An example can be found: `example.repl` and `example.pact` and can be launched:
@@ -86,3 +86,24 @@ Contracts:
 The version 0.5 of unofficial Pact Util library:
 - https://github.com/CryptoPascal31/pact-util-lib
 - https://pact-util-lib.readthedocs.io/en/beta_0.5/
+
+### Disabling features (optional)
+If you don't need to load some features, you can disable them.
+Before loading `init.repl` just use an `(env-data {})` command with the following parameters:
+
+  - `disable-util-lib` => Do not load the Pact Util Library modules
+  - `disable-marmalade` => Do not load Marmalade modules
+  - `disable-test-accounts` => Do not fund test accounts (alice, bob, ...)
+
+  Examples:
+  ```lisp
+  ; Do not fund test account
+  (env-data {"disable-test-accounts":1})
+  (load "kda-env/init.repl")
+  ```
+
+  ```lisp
+  ; Do not fund test account and load marmalade
+  (env-data {"disable-test-accounts":1, "disable-marmalade":1})
+  (load "kda-env/init.repl")
+  ```
