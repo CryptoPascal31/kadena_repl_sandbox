@@ -1,3 +1,7 @@
+; Note: On-chain is module is guarded by old fashion keyset.
+; It's not possible anymore to deploy exactly the same module.
+; ===> That's the governance has been shifted here to an AUTONOMOUS governance
+;
 (module guards1 AUTONOMOUS
 
   (defcap AUTONOMOUS ()
