@@ -1,0 +1,31 @@
+(env-data {})
+(load "../kda-env/init.repl")
+
+(module format-result G
+  (defcap G() true)
+
+  (defun format-json:string (data-in)
+    (+ "["
+       (+ (drop  -1 (fold (+) "" (map (lambda (x) (format "{}," [x])) data-in)))
+          "]")))
+)
+
+(let ((mod-list:[string] ["coin",
+                          "util.fungible-util",
+                          "util.guards",
+                          "util.guards1",
+                          "free.util-lists",
+                          "free.util-math",
+                          "free.util-random",
+                          "free.util-strings",
+                          "free.util-time",
+                          "free.util-zk",
+                          "kip.token-manifest",
+                          "marmalade.ledger",
+                          "marmalade.fixed-quote-policy",
+                          "marmalade.fixed-quote-royalty-policy",
+                          "marmalade.guard-token-policy"
+                          ]))
+  (print (format-json (zip (lambda (x y) {'mod:x, 'hash:y})
+                           mod-list
+                           (map (compose (describe-module) (at 'hash)) mod-list)))))

@@ -1,0 +1,31 @@
+code: |-
+  (let ((mod-list:[string] ["coin",
+                            "util.fungible-util",
+                            "util.guards",
+                            "util.guards1",
+                            "free.util-lists",
+                            "free.util-math",
+                            "free.util-random",
+                            "free.util-strings",
+                            "free.util-time",
+                            "free.util-zk",
+                            "kip.token-manifest",
+                            "marmalade.ledger",
+                            "marmalade.fixed-quote-policy",
+                            "marmalade.fixed-quote-royalty-policy",
+                            "marmalade.guard-token-policy"
+                            ]))
+
+    (zip (lambda (x y) {'mod:x, 'hash:y})
+         mod-list
+         (map (compose (describe-module) (at 'hash)) mod-list)))
+
+meta:
+  chainId: "8"
+  sender: ""
+  gasLimit: 50000
+  gasPrice: 0.00000001
+  ttl: 600
+networkId: mainnet01
+
+type: exec
