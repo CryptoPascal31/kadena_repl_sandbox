@@ -17,7 +17,7 @@ The goal is to simulate the Kadena environment as it can be found on-chain:
 1. Make sure that the Pact interpreter in installed.
   - https://github.com/kadena-io/pact/releases
 2. Create your REPL file which:
-  - load the main sandbox script `kda-env/init.repl`: `(load "kda-env/init.repl")`
+  - load the main sandbox script `kda-env/init.repl`: `(env-data {})(load "kda-env/init.repl")`
   - declare or load and test your contracts
 3. Optionally, you can disable some features by setting user data before loading `init.repl`
 4. Launch your REPL file with the pact executable.
@@ -107,3 +107,7 @@ Before loading `init.repl` just use an `(env-data {})` command with the followin
   (env-data {"disable-test-accounts":1, "disable-marmalade":1})
   (load "kda-env/init.repl")
   ```
+
+**Important note**: Even if you want all features to be enabled, It's mandatory to add
+`(env-data {})` with an empty object in your REPL file. This is caused by a bug in Pact,
+  expected to be fixed for Pact 4.7.
