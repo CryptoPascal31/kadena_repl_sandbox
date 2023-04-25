@@ -89,11 +89,11 @@ The version 0.5 of unofficial Pact Util library:
 
 ### Disabling features (optional)
 If you don't need to load some features, you can disable them.
-Before loading `init.repl` just use an `(env-data {})` command with the following parameters:
+Before loading `init.repl` just use an `(env-data {...})` command with the following parameters:
 
   - `disable-util-lib` => Do not load the Pact Util Library modules
   - `disable-marmalade` => Do not load Marmalade modules
-  - `disable-test-accounts` => Do not fund test accounts (alice, bob, ...)
+  - `disable-test-accounts` => Do not fund test accounts (Alice, Bob, ...)
 
   Examples:
   ```lisp
@@ -103,7 +103,7 @@ Before loading `init.repl` just use an `(env-data {})` command with the followin
   ```
 
   ```lisp
-  ; Do not fund test account and load marmalade
+  ; Do not fund test account and do not load marmalade
   (env-data {"disable-test-accounts":1, "disable-marmalade":1})
   (load "kda-env/init.repl")
   ```

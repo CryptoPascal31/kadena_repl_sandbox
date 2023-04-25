@@ -2,7 +2,7 @@
 
 ;; Here we disable Marmalade because it's not usefull in our test script.
 (env-data {"disable-marmalade":1})
-;; But is we want to enable it however, it's necessary to include (env-data {))
+;; But if we want to enable it however, it's necessary to include (env-data {))
 ;;    ---> See note in README.md
 ; (env-data {})
 (load "kda-env/init.repl")
