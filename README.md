@@ -36,7 +36,7 @@ Load successful
 ## Description
 
 ### Pact
-Based on Pact 4.6.0, and currently on-chains contracts (04/23/2023)
+Based on Pact 4.7.0, and currently on-chains contracts (04/23/2023)
 
 ### Bootstrap modules
 
@@ -107,7 +107,3 @@ Before loading `init.repl` just use an `(env-data {...})` command with the follo
   (env-data {"disable-test-accounts":1, "disable-marmalade":1})
   (load "kda-env/init.repl")
   ```
-
-**Important note**: Even if you want all features to be enabled, It's mandatory to add
-`(env-data {})` with an empty object in your REPL file. This is caused by a bug in Pact,
-  expected to be fixed for Pact 4.7.
