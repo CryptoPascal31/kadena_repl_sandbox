@@ -18,7 +18,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.5")
+  (defconst VERSION:string "0.6")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -70,7 +70,7 @@
     "Convert an integer ASCII representation to a string"
     (enforce (>= in 0) "Negative integers not allowed")
     (if (!= in 0)
-        (let ((len (ceiling (log 256.0 in)))
+        (let ((len (ceiling (log 256.0 (dec in))))
               (extract-char-value (lambda (idx) (mod (shift in (* -8 idx)) 256))))
           (encode-ascii (map (extract-char-value) (enumerate (- len 1) 0))))
         "")
@@ -232,9 +232,9 @@
              (has-decimal (= 2 (length parts)))
              (dec-part (if has-decimal (at 1 parts) "0"))
              (precision (if has-decimal (length dec-part) 0))
-             (int-val (* 1.0 (str-to-int 10 int-part)))
-             (dec-val (* (^ 0.1 precision) (str-to-int 10 dec-part)))
-             (val (+ int-val dec-val)))
+             (dec-multiplier (^ 0.1 (dec precision)))
+             (str-to-dint (lambda (x) (dec (str-to-int 10 x))))
+             (val (+ (str-to-dint int-part) (* dec-multiplier (str-to-dint dec-part)))))
         (round (if is-negative (- val) val) precision)))
   )
 )

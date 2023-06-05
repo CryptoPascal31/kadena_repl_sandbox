@@ -1,6 +1,6 @@
 ;SPDX-License-Identifier: MIT
 
-; This modules provides some convenient time management function for Pact.
+; This modules provides some convenient Zero Knowledge function for Pact.
 ;
 ; Be aware that this module is only in Beta and hasn't been audited:
 ;    --> BE CAREFUL if a security enforcement depends on one of theses functions
@@ -19,9 +19,11 @@
   ;  - https://github.com/kadena-io/pact/blob/master/tests/pact/pairing.repl
   ;  - https://github.com/iden3/snarkjs/blob/master/templates/verifier_groth16.sol.ejs
 
-  (defconst VERSION:string "0.5")
+  (defconst VERSION:string "0.6")
 
   (use util-strings [split-chunks])
+  (use util-lists [remove-first first])
+  (use util-math [++])
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -94,7 +96,7 @@
 
   (defun neg-G1:object{point-G1} (in:object{point-G1})
     "Returns the negative of a point in G1"
-    (bind in {"x" := x, "y" := y}
+    (bind in {'x := x, 'y := y}
       {'x:x, 'y: (- y)})
   )
 
@@ -110,11 +112,11 @@
              "Invalid public inputs")
 
     (bind key {'alpha:= alpha, 'beta:=beta, 'gamma:=gamma, 'delta:=delta, 'ic:=ic}
-      (enforce (= (+ 1 (length pub-inputs )) (length ic)) "Bad number of inputs")
+      (enforce (= (++ (length pub-inputs )) (length ic)) "Bad number of inputs")
       (bind proof {'A:=A, 'B:=B, 'C:=C}
         ; Compute The linear combinations of inputs and IC
-        (let* ((vk_0 (point-add 'g1 NULL-POINT-G1 (at 0 ic)))
-               (vk_n (fold (point-add "g1") vk_0 (zip (scalar-mult 'g1) (drop 1 ic) pub-inputs))))
+        (let* ((vk_0 (point-add 'g1 NULL-POINT-G1 (first ic)))
+               (vk_n (fold (point-add 'g1) vk_0 (zip (scalar-mult 'g1) (remove-first ic) pub-inputs))))
           (pairing-check [(neg-G1 A)  alpha  vk_n   C]
                          [B           beta   gamma  delta]))))
   )

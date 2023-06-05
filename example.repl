@@ -1,10 +1,10 @@
 ;; Load the environment
 
-;; Here we disable Marmalade because it's not usefull in our test script.
-(env-data {"disable-marmalade":1})
-;; But if we want to enable it however, it's necessary to include (env-data {))
-;;    ---> See note in README.md
-; (env-data {})
+;; Optionnal: Here we disable Marmalade because it's not usefull in our test script.
+(env-data {"disable-marmalade":true,
+           "disable-util-lib":false,
+           "disable-test-accounts":false})
+
 (load "kda-env/init.repl")
 
 ; Load my module

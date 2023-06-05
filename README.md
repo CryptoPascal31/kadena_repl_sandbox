@@ -36,7 +36,7 @@ Load successful
 ## Description
 
 ### Pact
-Based on Pact 4.6.0, and currently on-chains contracts (04/23/2023)
+Based on Pact 4.7.0, and currently on-chains contracts (06/05/2023)
 
 ### Bootstrap modules
 
@@ -83,9 +83,9 @@ Contracts:
 
 
 ### Pact Util library
-The version 0.5 of unofficial Pact Util library:
+The version 0.6 of unofficial Pact Util library:
 - https://github.com/CryptoPascal31/pact-util-lib
-- https://pact-util-lib.readthedocs.io/en/beta_0.5/
+- https://pact-util-lib.readthedocs.io/en/beta_0.6/
 
 ### Disabling features (optional)
 If you don't need to load some features, you can disable them.
@@ -98,16 +98,13 @@ Before loading `init.repl` just use an `(env-data {...})` command with the follo
   Examples:
   ```lisp
   ; Do not fund test account
-  (env-data {"disable-test-accounts":1})
+  (env-data {"disable-test-accounts":true})
   (load "kda-env/init.repl")
   ```
 
   ```lisp
-  ; Do not fund test account and do not load marmalade
-  (env-data {"disable-test-accounts":1, "disable-marmalade":1})
+  ; Do not fund test account and do not load Marmalade
+  (env-data {"disable-test-accounts":true,
+             "disable-marmalade":true})
   (load "kda-env/init.repl")
   ```
-
-**Important note**: Even if you want all features to be enabled, It's mandatory to add
-`(env-data {})` with an empty object in your REPL file. This is caused by a bug in Pact,
-  expected to be fixed for Pact 4.7.
