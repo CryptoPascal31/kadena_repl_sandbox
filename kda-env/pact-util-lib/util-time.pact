@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.5")
+  (defconst VERSION:string "0.6")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -48,7 +48,7 @@
     (diff-time in (epoch))
   )
 
-  (defun from-timestamp:decimal (timestamp:decimal)
+  (defun from-timestamp:time (timestamp:decimal)
     "Computes a time from an Unix timestamp"
     (add-time (epoch) timestamp)
   )
@@ -71,24 +71,24 @@
       (and? (<= a) (>= b) in))
   )
 
-  (defun is-past (in:time)
+  (defun is-past:bool (in:time)
     "Returns true if the date is in the past (before now)"
     (< in (now))
   )
 
-  (defun is-future (in:time)
+  (defun is-future:bool (in:time)
     "Returns true if the date is in the future (after now)"
     (> in (now))
   )
 
-  (defun is-today (in:time)
+  (defun is-today:bool (in:time)
     "Returns true if the time in is in the current day"
     (let ((in-day (format-time "%F" in)))
       (= (today) in-day))
   )
 
   ;; Block estimation function
-  (defun current-block ()
+  (defun current-block:integer ()
      (at 'block-height (chain-data)))
 
   (defun est-height-at-time:integer (target-time:time)
@@ -101,7 +101,7 @@
   (defun est-time-at-height:time (target-block:integer)
     "Estimates the time of the target-block height"
     (let ((delta (- target-block (current-block))))
-      (add-time (now) (* BLOCK-TIME delta)))
+      (add-time (now) (* BLOCK-TIME (dec delta))))
   )
 
   ;; Diff time functions

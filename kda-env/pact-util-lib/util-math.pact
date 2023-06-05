@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.5")
+  (defconst VERSION:string "0.6")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -114,12 +114,23 @@
   (defun avg:decimal (x:[decimal])
     "Returns the average of a list"
     (enforce-not-empty x)
-    (/ (sum x) (length x)))
+    (/ (sum x) (dec (length x))))
 
   (defun sizeof:integer (x:integer)
     "Returns the storage size of a positive integer in bytes"
     (enforce (>= x 0) "Sizeof does not allow negative numbers")
-    (if (= x 0) 1 (ceiling (log 256.0 (+ x 1))))
+    (if (= x 0) 1
+                (ceiling (log 256.0 (dec (++ x)))))
+  )
+
+  (defun ++:integer (x:integer)
+    "Increment integer"
+    (+ x 1)
+  )
+
+  (defun --:integer (x:integer)
+    "Decrement integer"
+    (- x 1)
   )
 
   (defun is-even:bool (x:integer)
@@ -177,7 +188,7 @@
            (a* (if (< a b) b a))
            (b* (if (< a b) a b)))
       (if (= b* 0) a* ; If one (or both) of the arguments is 0: return |a|
-          (let* ((max-iterations (ceiling (log GOLDEN-RATIO b*)))
+          (let* ((max-iterations (ceiling (log GOLDEN-RATIO (dec b*))))
                  (gcd-inner (lambda (x i) (if (= (at 'b x) 0)
                                               x
                                               {'a: (at 'b x), 'b: (mod (at 'a x) (at 'b x))})))
@@ -194,21 +205,25 @@
 
   (defun pow10:decimal (x:integer)
     "Returns 10^x, rounded to 12 decimals (rounding is important when x is negative)"
-    (round (^ 10.0 x) 12))
+    (round (^ 10.0 (dec x)) 12))
 
   (defun xEy (x:decimal y:integer)
     "Returns x.10^y, rounded to 12 decimals"
     (round (* x (pow10 y)) 12))
 
+  (defun dec*:decimal(x)
+    "Convert  an integer or decimal to decimal"
+    (if (= (typeof x) "decimal") x (dec x)))
+
   ;;; Log functions
   (defun log10:decimal (x)
     "Returns the log of x base 10, rounded to 12 decimals"
     ; x can be decimal or an integer but the returned result is always a decimal
-    (round (log 10 (* 1.0 x)) 12))
+    (round (log 10.0 (dec* x)) 12))
 
   (defun safe-log (x y default)
     "Log of Y base X, but returns default when y <= 0"
-    (if (> (* 1.0 y) 0.0 ) (log x y) default))
+    (if (> (dec* y) 0.0 ) (log x y) default))
 
   (defun safe-ln (x:decimal default:decimal)
     "Natural log of x, but returns default when x <= 0"
@@ -218,6 +233,6 @@
     "Returns the log of x base 10, rounded to 12 decimals but returns default when x <= 0"
     ; x can be decimal or an integer but the returned result is always a decimal
     ; btw default has to be a decimal
-    (if (> (* 1.0 x) 0.0 ) (log10 x) default))
+    (if (> (dec* x) 0.0 ) (log10 x) default))
 
 )
