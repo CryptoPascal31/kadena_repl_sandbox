@@ -98,12 +98,13 @@ Before loading `init.repl` just use an `(env-data {...})` command with the follo
   Examples:
   ```lisp
   ; Do not fund test account
-  (env-data {"disable-test-accounts":1})
+  (env-data {"disable-test-accounts":true})
   (load "kda-env/init.repl")
   ```
 
   ```lisp
-  ; Do not fund test account and do not load marmalade
-  (env-data {"disable-test-accounts":1, "disable-marmalade":1})
+  ; Do not fund test account and do not load Marmalade
+  (env-data {"disable-test-accounts":true,
+             "disable-marmalade":true})
   (load "kda-env/init.repl")
   ```
