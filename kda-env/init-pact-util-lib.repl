@@ -3,6 +3,7 @@
 (load "pact-util-lib/util-lists.pact")
 (load "pact-util-lib/util-strings.pact")
 (load "pact-util-lib/util-math.pact")
+(load "pact-util-lib/util-chain-data.pact")
 (load "pact-util-lib/util-time.pact")
 (load "pact-util-lib/util-fungible.pact")
 (load "pact-util-lib/util-zk.pact")

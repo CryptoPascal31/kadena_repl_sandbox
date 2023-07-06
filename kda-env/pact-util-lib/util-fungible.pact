@@ -2,7 +2,7 @@
 
 ; This module provides some utilities to work with fungible tokens.
 ;
-; The library deployed by the Kadena team was outdatted and a little bit shitty.
+; The library deployed by the Kadena team was outdated and a little bit shitty.
 ; That's why I created this.
 ;
 ; Be aware that this module is only in Beta and hasn't been audited:
@@ -18,10 +18,12 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.6")
+  (defconst VERSION:string "0.7pre2")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
+
+  (use util-chain-data [chain-id])
 
   (defconst STD_CHARSET:integer CHARSET_LATIN1)
 
@@ -40,7 +42,7 @@
 
   (defun enforce-valid-amount:bool (precision:integer amount:decimal)
     "Validate that an amount is positive and does not viloate the precision \
-   \ Must be used to handle evry amount in a fungible module"
+   \ Must be used to handle every amount in a fungible module"
     (enforce (> amount 0.0) "Amount must be positive")
     (enforce-precision precision amount)
   )
@@ -92,16 +94,14 @@
              (format "Reserved protocol guard violation: {}" [(typeof-principal account)]))
   )
 
-  (defun enforce-valid-chain-id:bool (chain-id:string)
+  (defun enforce-valid-chain-id:bool (target-chain-id:string)
     "Enforce that chain-id is a valid chain identifier"
-    (enforce (contains chain-id VALID_CHAIN_IDS) "Target chain is not a valid Chainweb chainID"))
+    (enforce (contains target-chain-id VALID_CHAIN_IDS) "Target chain is not a valid Chainweb chainID"))
 
-
-  (defun enforce-not-same-chain (chain-id:string)
+  (defun enforce-not-same-chain:bool (target-chain-id:string)
     "Enforce that chain-id is not same as the current chain"
-    (enforce (!= (at 'chain-id (chain-data)) chain-id)
-             (format "Target chain {} cannot be the current chain" [chain-id]))
+    (enforce (!= (chain-id) target-chain-id)
+             (format "Target chain {} cannot be the current chain {}" [target-chain-id, (chain-id)]))
   )
-
 
 )
