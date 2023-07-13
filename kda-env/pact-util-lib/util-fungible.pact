@@ -18,7 +18,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.7pre2")
+  (defconst VERSION:string "0.7pre")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -102,6 +102,14 @@
     "Enforce that chain-id is not same as the current chain"
     (enforce (!= (chain-id) target-chain-id)
              (format "Target chain {} cannot be the current chain {}" [target-chain-id, (chain-id)]))
+  )
+
+  (defschema fungible-xchain-sch
+    "Schema for yielded value in cross-chain transfers"
+    receiver:string
+    receiver-guard:guard
+    amount:decimal
+    source-chain:string
   )
 
 )
