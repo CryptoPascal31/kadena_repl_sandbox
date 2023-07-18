@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.6")
+  (defconst VERSION:string "0.7pre")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -77,6 +77,14 @@
     (let ((in-enum (enumerate-list in))
           (cmp (lambda (x y) (if (> (at 'v x) (at 'v y)) x y))))
       (at 'i (fold (cmp) (first in-enum) (remove-first in-enum))))
+  )
+
+  (defun clamp:decimal (low-limit:decimal up-limit:decimal x:decimal)
+    "Clamp x between low-limit and up-limit"
+    (cond
+      ((< x low-limit) low-limit)
+      ((> x up-limit) up-limit)
+      x)
   )
 
   (defun sum3:decimal (x:decimal y:decimal z:decimal)
@@ -169,11 +177,11 @@
 
   (defun sign:decimal (x:decimal)
     "Returns 1.0 if x is positive, 0.0 if x is null, and -1.0 if x is negative"
-    (if (= x 0.0)
-        0.0
-        (if (> x 0.0)
-            1.0
-            -1.0)))
+    (cond
+      ((> x 0.0) 1.0)
+      ((< x 0.0) -1.0)
+      0.0))
+
 
   (defun gcd:integer (a:integer b:integer)
     "Returns the greatest common divisor of 2 integers"
@@ -212,7 +220,7 @@
     (round (* x (pow10 y)) 12))
 
   (defun dec*:decimal(x)
-    "Convert  an integer or decimal to decimal"
+    "Convert an integer or decimal to decimal"
     (if (= (typeof x) "decimal") x (dec x)))
 
   ;;; Log functions

@@ -18,7 +18,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.6")
+  (defconst VERSION:string "0.7pre")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -179,6 +179,10 @@
           false))
   )
 
+  (defun starts-with* (to-match:string in:string)
+    "Returns true if the string starts with the string to-match"
+    (starts-with in to-match))
+
   (defun ends-with:bool (in:string to-match:string)
     "Returns true if the string ends with the string to-match"
     (let ((len (length to-match)))
@@ -186,6 +190,10 @@
           (= (take (- len) in) to-match)
           false))
   )
+
+  (defun ends-with* (to-match:string in:string)
+    "Returns true if the string ends with the string to-match"
+    (ends-with in to-match))
 
   ;; Stripping functions
   (defun --count-to-strip:integer (to-remove:string in:[string])
