@@ -1,5 +1,7 @@
 (begin-tx)
 (namespace 'free)
+(load "pact-util-lib/util-chain-data.pact")
+(load "pact-util-lib/util-fungible.pact")
 (load "pact-util-lib/util-lists.pact")
 (load "pact-util-lib/util-strings.pact")
 (load "pact-util-lib/util-math.pact")

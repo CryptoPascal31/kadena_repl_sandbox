@@ -15,7 +15,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.6")
+  (defconst VERSION:string "0.7")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -179,5 +179,29 @@
     "Remove and item from the list but raises an error if it does not exist"
     (enforce (contains item in) "The item is not present in the list")
     (remove-item in item)
+  )
+
+  ;; Shift/Roll functions
+  (defun shift-left:list (in:list item)
+    "Shift a list to the left"
+    (remove-first (append-last in item)))
+
+  (defun shift-right:list (in:list item)
+    "Shift a list to the right"
+    (remove-last (insert-first in item)))
+
+  (defun roll-left:list (in:list)
+    "Roll a list to the left"
+    (shift-left in (first in)))
+
+  (defun roll-right:list (in:list)
+    "Roll a list to the right"
+    (shift-right in (last in)))
+
+  (defun fifo-push:list (in:list fifo-size:integer item)
+    "Append an item at the right, and shift left if the FIFO if full"
+    (if (>= (length in) fifo-size)
+      (shift-left in item)
+      (append-last in item))
   )
 )

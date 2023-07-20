@@ -14,10 +14,12 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.6")
+  (defconst VERSION:string "0.7")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
+
+  (use util-chain-data [block-time block-height])
 
   (defconst EPOCH (time "1970-01-01T00:00:00Z"))
 
@@ -36,7 +38,7 @@
 
   (defun now:time ()
     "Returns the current time"
-    (at 'block-time (chain-data)))
+    (block-time))
 
   (defun today:string ()
     "Returns the current day"
@@ -87,20 +89,17 @@
       (= (today) in-day))
   )
 
-  ;; Block estimation function
-  (defun current-block:integer ()
-     (at 'block-height (chain-data)))
 
   (defun est-height-at-time:integer (target-time:time)
     "Estimates the block height at a target-time"
     (let* ((delta (diff-time target-time (now)))
-           (est-block (+ (current-block) (round (/ delta BLOCK-TIME)))))
+           (est-block (+ (block-height) (round (/ delta BLOCK-TIME)))))
       (if (> est-block 0 ) est-block 0))
   )
 
   (defun est-time-at-height:time (target-block:integer)
     "Estimates the time of the target-block height"
-    (let ((delta (- target-block (current-block))))
+    (let ((delta (- target-block (block-height))))
       (add-time (now) (* BLOCK-TIME (dec delta))))
   )
 
