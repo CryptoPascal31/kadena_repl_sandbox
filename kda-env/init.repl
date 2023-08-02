@@ -21,6 +21,11 @@
     (load "init-marmalade.repl")
     "")
 
+; Marmalade v2
+(if (not (try false (read-msg "disable-marmalade-v2")))
+    (load "init-marmalade-v2.repl")
+    "")
+
 ; Init test accounts
 (if (not (try false (read-msg "disable-test-accounts")))
     (load "init-test-accounts.repl")

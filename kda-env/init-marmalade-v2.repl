@@ -1,0 +1,50 @@
+(begin-tx)
+(namespace 'marmalade-v2)
+
+(env-data {'ks:["marmalade-admin"]})
+(define-keyset "marmalade-v2.marmalade-admin" (read-keyset 'ks))
+
+(namespace 'kip)
+
+; Manifest Module
+; Don't try to load the module if Marmalade v1 has already done the job
+(if (try false (read-msg "disable-marmalade"))
+    (load "./marmalade-v2/manifest.pact")
+    "")
+
+; Load interfaces
+(load "./marmalade-v2/token-policy-v2.pact")
+(load "./marmalade-v2/poly-fungible-v3.pact")
+
+(env-data {'upgrade:false})
+; Marmalade core
+(load "./marmalade-v2/quote-manager.pact")
+(load "./marmalade-v2/policy-manager.pact")
+(load "./marmalade-v2/ledger.pact")
+
+; Concrete policies
+(load "./marmalade-v2/collection-policy-v1.pact")
+(load "./marmalade-v2/guard-policy-v1.pact")
+(load "./marmalade-v2/non-fungible-policy-v1.pact")
+(load "./marmalade-v2/royalty-policy-v1.pact")
+
+; Other policies
+(load "./marmalade-v2/fixed-issuance-policy-v1.pact")
+(load "./marmalade-v2/migration-policy-v1.pact")
+(load "./marmalade-v2/onchain-manifest-policy-v1.pact")
+
+; Util => Predefined policies
+(load "./marmalade-v2/util-v1.pact")
+
+
+; Init evrything
+(env-keys ["marmalade-admin"])
+(policy-manager.init (ledger.ledger-guard))
+(quote-manager.init (policy-manager.policy-manager-guard))
+(policy-manager.write-concrete-policy policy-manager.NON_FUNGIBLE_POLICY non-fungible-policy-v1)
+(policy-manager.write-concrete-policy policy-manager.ROYALTY_POLICY royalty-policy-v1)
+(policy-manager.write-concrete-policy policy-manager.COLLECTION_POLICY collection-policy-v1)
+(policy-manager.write-concrete-policy policy-manager.GUARD_POLICY guard-policy-v1)
+(commit-tx)
+
+(print "Marmalade-v2 contracts initialized")
