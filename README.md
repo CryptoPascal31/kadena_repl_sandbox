@@ -82,6 +82,19 @@ Contracts:
 - 3 default policy contracts in NS `marmalade`
 
 
+### Marmalade v2
+The Marmalade v2 is installed. But this is only a beta version, since the upstream
+is not frozen.
+
+Marmalade v2 contracts are installed inside the namespace `marlamade-v2`. Some slight changes have been done from upstream.
+
+Contracts:
+ - poly-fungible-v3 and token-policy-v2 interfaces in NS `kip`
+ - core contracts: ledge, policy-manager and quote-manager
+ - Collection of policies
+ - Utility
+
+
 ### Pact Util library
 The version 0.6 of unofficial Pact Util library:
 - https://github.com/CryptoPascal31/pact-util-lib
