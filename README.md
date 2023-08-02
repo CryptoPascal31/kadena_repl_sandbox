@@ -83,10 +83,9 @@ Contracts:
 
 
 ### Marmalade v2
-The Marmalade v2 is installed. But this is only a beta version, since the upstream
-is not frozen.
+The Marmalade v2 contracts are installed. But this is only a beta version, since the upstream is not frozen.
 
-Marmalade v2 contracts are installed inside the namespace `marlamade-v2`. Some slight changes have been done from upstream.
+Contracts are installed inside the namespace `marlamade-v2`. Some slight changes have been done from upstream.
 
 Contracts:
  - poly-fungible-v3 and token-policy-v2 interfaces in NS `kip`
@@ -106,6 +105,7 @@ Before loading `init.repl` just use an `(env-data {...})` command with the follo
 
   - `disable-util-lib` => Do not load the Pact Util Library modules
   - `disable-marmalade` => Do not load Marmalade modules
+  - `disable-marmalade-v2` => Do not load Marmalade modules
   - `disable-test-accounts` => Do not fund test accounts (Alice, Bob, ...)
 
   Examples:
@@ -118,6 +118,7 @@ Before loading `init.repl` just use an `(env-data {...})` command with the follo
   ```lisp
   ; Do not fund test account and do not load Marmalade
   (env-data {"disable-test-accounts":true,
-             "disable-marmalade":true})
+             "disable-marmalade":true,
+             "disable-marmalade-v2":true})
   (load "kda-env/init.repl")
   ```
