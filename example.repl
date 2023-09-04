@@ -1,7 +1,8 @@
 ;; Load the environment
 
 ;; Optionnal: Here we disable Marmalade because it's not usefull in our test script.
-(env-data {"disable-marmalade":true,
+(env-data {"disable-marmalade-v1":true,
+           "disable-marmalade-ng":true,
            "disable-util-lib":false,
            "disable-test-accounts":false})
 

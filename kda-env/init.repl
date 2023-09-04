@@ -17,8 +17,13 @@
     "")
 
 ; Marmalade
-(if (not (try false (read-msg "disable-marmalade")))
+(if (not (try false (read-msg "disable-marmalade-v1")))
     (load "init-marmalade.repl")
+    "")
+
+; Marmalade
+(if (not (try false (read-msg "disable-marmalade-ng")))
+    (load "init-marmalade-ng.repl")
     "")
 
 ; Init test accounts

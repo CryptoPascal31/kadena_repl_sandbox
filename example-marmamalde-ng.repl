@@ -1,0 +1,38 @@
+(env-data {"disable-marmalade":true})
+(load "kda-env/init.repl")
+
+; Create two token and mint it
+(begin-tx)
+(use marmalade-ng.ledger)
+(use marmalade-ng.std-policies)
+(use free.util-strings)
+
+(env-data {'create-ks:["create"],
+           "marmalade_fixed_supply":{'precision:1,
+                                     'min_mint_amount:0.1,
+                                     'max_supply: 2.0}
+          })
+
+(env-sigs [{'key:"create", 'caps:[(ENFORCE-RESERVED)]}])
+
+
+
+(create-token "t:r-4jQUrZWpYfEqq_iGvBn1ofgCLPoh2ZfG5kfAVX2KM" 1 "http://token-1"
+              (to-policies "INSTANT-MINT FIXED-ISSUANCE DISABLE-BURN FIXED-SALE" )(read-keyset 'create-ks))
+
+(create-token "t:QvuWzPPKhSlueC9hryQKJ-ItFPGtdOhDDhrD4q8lc-I" 1 "http://token-2"
+              (to-policies "INSTANT-MINT FIXED-ISSUANCE DISABLE-BURN FIXED-SALE" )(read-keyset 'create-ks))
+
+
+(env-sigs [ {'key:"nobody", 'caps:[(MINT "t:r-4jQUrZWpYfEqq_iGvBn1ofgCLPoh2ZfG5kfAVX2KM" "alice" 2.0),
+                                   (MINT "t:QvuWzPPKhSlueC9hryQKJ-ItFPGtdOhDDhrD4q8lc-I" "alice" 1.0)]}])
+(env-data {'alice-ks:["alice"]})
+
+(mint "t:r-4jQUrZWpYfEqq_iGvBn1ofgCLPoh2ZfG5kfAVX2KM" "alice" (read-keyset 'alice-ks) 2.0)
+(mint "t:QvuWzPPKhSlueC9hryQKJ-ItFPGtdOhDDhrD4q8lc-I" "alice" (read-keyset 'alice-ks) 1.0)
+
+(print "")
+(print "Balances for Alice:")
+(print (join "\n" (map (to-string) (list-balances "alice"))))
+
+(commit-tx)
