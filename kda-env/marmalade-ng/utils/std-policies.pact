@@ -15,7 +15,7 @@
     pol:module{token-policy-ng-v1}
   )
 
-  (defconst POLICIES-LIST:[object{entry}] [{'name:"ADJUSTABLE-ROYALTY",'pol:policy-auction-sale},
+  (defconst POLICIES-LIST:[object{entry}] [{'name:"ADJUSTABLE-ROYALTY",'pol:policy-adjustable-royalty},
                                            {'name:"AUCTION-SALE",      'pol:policy-auction-sale},
                                            {'name:"BLACKLIST",         'pol:policy-blacklist},
                                            {'name:"COLLECTION",        'pol:policy-collection},
