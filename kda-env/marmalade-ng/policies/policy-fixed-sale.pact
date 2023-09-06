@@ -45,6 +45,9 @@
     recipient:string ; Recipient account
   )
 
+  (defun read-fixed-quote-msg:object{fixed-quote-msg-sch} (token:object{token-info})
+    (enforce-get-msg-data "fixed_quote" token))
+
   ;-----------------------------------------------------------------------------
   ; Util functions
   ;-----------------------------------------------------------------------------
@@ -82,9 +85,6 @@
     @doc "Mark the sale as being disabled"
     (update quotes (pact-id) {'enabled: false})
     true)
-
-  (defun read-fixed-quote-msg:object{fixed-quote-msg-sch} (token:object{token-info})
-    (enforce-get-msg-data "fixed_quote" token))
 
   ;-----------------------------------------------------------------------------
   ; Policy hooks
@@ -179,7 +179,14 @@
         false))
 
   ;-----------------------------------------------------------------------------
-  ; Lcoal functions
+  ; View functions
+  ;-----------------------------------------------------------------------------
+  (defun get-sale:object{quote-sch} (sale-id:string)
+    @doc "Return the sale details of a given sale-id"
+    (read quotes sale-id))
+
+  ;-----------------------------------------------------------------------------
+  ; View functions (local only)
   ;-----------------------------------------------------------------------------
   (defun get-all-active-sales:[object{quote-sch}] ()
     @doc "Return all currently active sales"
@@ -189,9 +196,4 @@
     @doc "Return all currently actives sales details related to a token"
     (select quotes (and? (where 'enabled (=  true))
                          (where 'token-id (= token-id)))))
-
-  (defun get-sale:object{quote-sch} (sale-id:string)
-    @doc "Return the sale details of a given sale-id"
-    (read quotes sale-id))
-
 )

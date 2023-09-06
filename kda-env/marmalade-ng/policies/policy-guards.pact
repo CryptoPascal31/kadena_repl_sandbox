@@ -24,6 +24,14 @@
   (deftable guards:{guards-sch})
 
   ;-----------------------------------------------------------------------------
+  ; Input data
+  ;-----------------------------------------------------------------------------
+
+  ; For this policy the input data schema is shared with the in-table schema
+  (defun read-guards-msg:object{guards-sch} (token:object{token-info})
+    (enforce-get-msg-data "guards" token))
+
+  ;-----------------------------------------------------------------------------
   ; Constants functions and guards helpers
   ;-----------------------------------------------------------------------------
   (defun success:bool ()
@@ -66,7 +74,7 @@
 
   (defun enforce-init:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-INIT token policy-guards))
-    (let ((data:object{guards-sch} (enforce-get-msg-data "guards" token)))
+    (let ((data (read-guards-msg token)))
       (insert guards (at 'id token) data)
       (emit-event (GUARDS data)))
   )

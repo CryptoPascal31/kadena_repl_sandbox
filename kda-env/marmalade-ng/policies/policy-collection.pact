@@ -24,6 +24,7 @@
   (defschema token-collection-sch
     token-id:string
     collection-id:string
+    rank:integer
   )
 
   (deftable tokens:{token-collection-sch})
@@ -86,8 +87,10 @@
           ; max-size=0 means unlimited collection
           (enforce (or? (= 0) (< current-size) max-size) "Exceeds collection size")
 
-          (update collections collection-id {'size:(++ current-size)}))
-        (insert tokens token-id {'token-id:token-id, 'collection-id:collection-id})
+          (update collections collection-id {'size:(++ current-size)})
+          (insert tokens token-id {'token-id:token-id,
+                                   'collection-id:collection-id,
+                                   'rank: (++ current-size)}))
         true))
   )
 
@@ -115,18 +118,32 @@
   ;-----------------------------------------------------------------------------
   ; View functions
   ;-----------------------------------------------------------------------------
-  (defun get-collection:object{collection-sch} (collection-id:string )
+  (defun get-collection:object{collection-sch} (collection-id:string)
+    @doc "Return the details of a given collection"
     (read collections collection-id))
 
-  (defun get-all-collections:[string] ()
-    (keys collections))
-
   (defun get-token-collection:object{collection-sch} (token-id:string)
+    @doc "Return the collection details of given token"
     (with-read tokens token-id {'collection-id:=collection-id}
       (get-collection collection-id)))
 
+  (defun get-token-rank-in-collection:integer (token-id:string)
+    @doc "Return the collection rank of a collection"
+    (with-read tokens token-id {'rank:=r}
+      r))
+
+  ;-----------------------------------------------------------------------------
+  ; View functions (local only)
+  ;-----------------------------------------------------------------------------
+  (defun get-all-collections:[string] ()
+    @doc "Return the list of all collections"
+    (keys collections))
+
   (defun list-tokens-of-collection:[string] (collection-id:string)
+    @doc "Return the list of tokens that belong to a given collection"
     (map (at 'token-id)
-         (select tokens ['token-id]  (where 'collection-id (= collection-id)))))
+         (sort ['rank]
+               (select tokens ['token-id, 'rank]  (where 'collection-id (= collection-id)))))
+  )
 
 )

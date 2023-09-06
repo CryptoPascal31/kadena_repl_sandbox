@@ -42,12 +42,19 @@
     rate:decimal
   )
 
+  (defun read-royalty-init-msg:object{royalty-init-msg-sch} (token:object{token-info})
+    (enforce-get-msg-data "royalty" token))
+
+  ; -----------
   (defschema royalty-sale-msg-sch
     maximum_royalty:decimal
   )
 
   (defconst ROYALTY-SALE-MSG-DEFAULT:object{royalty-sale-msg-sch}
     {'maximum_royalty:(pow10 12)})
+
+  (defun read-royalty-sale-msg:object{royalty-sale-msg-sch} (token:object{token-info})
+    (get-msg-data "royalty_sale" token ROYALTY-SALE-MSG-DEFAULT))
 
   ;-----------------------------------------------------------------------------
   ; Util functions
@@ -62,7 +69,7 @@
 
   (defun enforce-init:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-INIT token policy-adjustable-royalty))
-    (let ((royalty-init-msg:object{royalty-init-msg-sch} (enforce-get-msg-data "royalty" token ))
+    (let ((royalty-init-msg (read-royalty-init-msg token))
           (token-id (at 'id token)))
       (bind royalty-init-msg {'creator_acct:=c-a, 'creator_guard:=c-g, 'rate:=rate}
         (validate-rate rate)
@@ -85,7 +92,7 @@
   (defun enforce-sale-offer:bool (token:object{token-info} seller:string amount:decimal timeout:time)
     (require-capability (ledger.POLICY-ENFORCE-OFFER token (pact-id) policy-adjustable-royalty))
     (let ((sale-msg (enforce-read-sale-msg token))
-          (royalty-msg:object{royalty-sale-msg-sch} (get-msg-data "royalty_sale" token ROYALTY-SALE-MSG-DEFAULT)))
+          (royalty-msg (read-royalty-sale-msg token)))
 
       (with-read royalty-tokens (at 'id token) {'rate:=rate}
         ; Check that the creator did'n change the royalty just before the sale has been submitted
@@ -151,12 +158,17 @@
 
 
   ;-----------------------------------------------------------------------------
-  ; Lcoal functions
+  ; View functions
   ;-----------------------------------------------------------------------------
   (defun get-royalty-details:object{royalty-token-sch} (token-id:string)
+    @doc "Return the details of the royalty spec for a token-id"
     (read royalty-tokens token-id))
 
+  ;-----------------------------------------------------------------------------
+  ; View functions (local only)
+  ;-----------------------------------------------------------------------------
   (defun get-royalty-details-per-creator:[object{royalty-token-sch}] (creator:string)
+    @doc "Return the details of the royalty specs of all tokens of a given creator"
     (select royalty-tokens (where 'creator-account (= creator))))
 
 )

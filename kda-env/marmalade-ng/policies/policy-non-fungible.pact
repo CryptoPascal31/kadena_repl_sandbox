@@ -9,6 +9,9 @@
   (defcap GOVERNANCE ()
     (enforce-keyset ADMIN-KEYSET))
 
+  ;-----------------------------------------------------------------------------
+  ; Policy hooks
+  ;-----------------------------------------------------------------------------
   (defun rank:integer ()
     0)
 
@@ -50,6 +53,4 @@
 
   (defun enforce-sale-settle:bool (token:object{token-info})
     true)
-
-
 )

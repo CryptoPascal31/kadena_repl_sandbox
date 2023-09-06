@@ -44,10 +44,13 @@
   ; Input data
   ;-----------------------------------------------------------------------------
   (defschema auction-msg-sch
-    start_price:decimal
-    recipient:string
-    increment_ratio:decimal
+    start_price:decimal ; start price of the auction
+    recipient:string ; recipien account
+    increment_ratio:decimal ;incrment ratio (multiplier) between each bid
   )
+
+  (defun read-auction-msg:object{auction-msg-sch} (token:object{token-info})
+    (enforce-get-msg-data "auction" token))
 
   ;-----------------------------------------------------------------------------
   ; Escrow accounts
@@ -101,8 +104,6 @@
     (update auctions (pact-id) {'enabled: false})
     true)
 
-  (defun read-auction-msg:object{auction-msg-sch} (token:object{token-info})
-    (enforce-get-msg-data "auction" token))
 
   (defun check-ledger-account:bool (token-id:string account:string guard:guard)
     @doc "Check an account on the Marmalade legder \
@@ -282,22 +283,26 @@
   )
 
   ;-----------------------------------------------------------------------------
-  ; Lcoal functions
+  ; View functions
+  ;-----------------------------------------------------------------------------
+  (defun get-sale:object{auction-sch} (sale-id:string)
+    @doc "Return the details of a sale"
+    (read auctions sale-id))
+
+
+  ;-----------------------------------------------------------------------------
+  ; View functions (local only)
   ;-----------------------------------------------------------------------------
   (defun get-all-active-sales:[object{auction-sch}] ()
+    @doc "Return all active sales managed by this policy"
     (select auctions (and? (where 'timeout (is-future))
                            (where 'enabled (= true)))))
 
-  (defun get-all-act-sales:[object{auction-sch}] ()
-   (select auctions (and? (where 'timeout (is-past))
-                          (where 'enabled (= true)))))
-
-
   (defun get-sales-for-token:[object{auction-sch}] (token-id:string)
+    @doc "Return all active sales managed by this policy for a given token-id"
     (select auctions (and? (where 'enabled (= true))
                            (where 'token-id (= token-id)))))
 
-  (defun get-sale:object{auction-sch} (sale-id:string)
-    (read auctions sale-id))
+
 
 )

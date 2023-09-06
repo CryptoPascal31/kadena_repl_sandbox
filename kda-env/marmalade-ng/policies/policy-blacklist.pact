@@ -64,7 +64,6 @@
       (enforce (not is-bl) "Account in blacklist"))
   )
 
-
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
@@ -131,7 +130,7 @@
     (--update-blacklist token-id account false))
 
   ;-----------------------------------------------------------------------------
-  ; View functions
+  ; View functions (local only)
   ;-----------------------------------------------------------------------------
   (defun list-blacklisted-accounts:[string] (token-id:string)
     @doc "Return all accounts blacklisted for a specific token"

@@ -3,7 +3,7 @@
   (use token-policy-ng-v1 [token-info])
   (use util-policies)
   (use free.util-math)
-  (use free.util-fungible [enforce-valid-account])
+
 
   ;-----------------------------------------------------------------------------
   ; Governance
@@ -44,34 +44,31 @@
                                                                  'fee-rate:0.0,
                                                                  'max-fee:0.0})
 
+  (defun read-marketplace-msg:object{marketplace-fee-sch} (token:object{token-info})
+    (get-msg-data "marketplace" token DEFAULT-MARKETPLACE-FEE))
+
   ;-----------------------------------------------------------------------------
   ; Util functions
   ;-----------------------------------------------------------------------------
-  (defun check-account:bool (currency:module{fungible-v2} acct:string)
-    @doc "Check an account against a sepcific currency: validity of the name + existance"
-    (enforce-valid-account acct)
-    (let ((bal (try -1.0 (currency::get-balance acct))))
-      (enforce (>= bal 0.0)
-               (format "Account {} does not exist" [acct]))))
-
-
   (defun enforce-marketplace-input-valid:bool (input:object{marketplace-fee-sch})
     @doc "Check the validity of a market place input object \
         \  - Fees must be consistent                        \
-        \  - Account must be exist for the currency"
+        \  - Account must exist for the currency"
     (bind input {'marketplace-account:=account,
                  'currency:=currency:module{fungible-v2},
                  'min-fee:=min-fee,
                  'fee-rate:=fee-rate,
                  'max-fee:=max-fee}
+      ; Are min-fee and max-fee are positive and max-fee > min-fee ?
       (enforce (and (and (<= 0.0 min-fee) (<= 0.0 max-fee))
                     (<= min-fee max-fee)) "Illegal Min/Max fee")
-      (enforce (between 0.0 1.0 fee-rate) "Illegal fee rate")
-      (check-account currency account))
-  )
 
-  (defun read-marketplace-msg:object{marketplace-fee-sch} (token:object{token-info})
-    (get-msg-data "marketplace" token DEFAULT-MARKETPLACE-FEE))
+      ; Is fee-rate is between 0.0 and 1.0 ?
+      (enforce (between 0.0 1.0 fee-rate) "Illegal fee rate")
+
+      ; Is the payment account OK ?
+      (check-fungible-account currency account))
+  )
 
   (defun disable:bool ()
       @doc "Mark the sale as being disabled"
@@ -152,12 +149,15 @@
     )
 
   ;-----------------------------------------------------------------------------
-  ; Lcoal functions
+  ; View functions
   ;-----------------------------------------------------------------------------
   (defun get-marketplace-fee:object{marketplace-sale-sch} (sale-id:string)
     @doc "Return the detail of the marketplace fee record for the given sale"
     (read marketplace-sales sale-id))
 
+  ;-----------------------------------------------------------------------------
+  ; View functions (local only)
+  ;-----------------------------------------------------------------------------
   (defun get-active-sales-by-name:[object{marketplace-sale-sch}] (market-name:string)
     @doc "Return the list (with details) of the active sales for given marketplace"
     (select marketplace-sales (and? (where 'enabled (= true))

@@ -13,7 +13,6 @@
   ;-----------------------------------------------------------------------------
   ; Schemas and Tables
   ;-----------------------------------------------------------------------------
-
   ; Store the royalty informations per token
   (defschema royalty-token-sch
     token-id:string
@@ -40,6 +39,9 @@
     rate:decimal
   )
 
+  (defun read-royalty-init-msg:object{royalty-init-msg-sch} (token:object{token-info})
+    (enforce-get-msg-data "royalty" token))
+
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
@@ -47,7 +49,7 @@
 
   (defun enforce-init:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-INIT token policy-royalty))
-    (let ((royalty-init-msg:object{royalty-init-msg-sch} (enforce-get-msg-data "royalty" token))
+    (let ((royalty-init-msg (read-royalty-init-msg token))
           (token-id (at 'id token)))
       (bind royalty-init-msg {'creator_acct:=c-a, 'creator_guard:=c-g, 'rate:=rate}
         (insert royalty-tokens token-id {'token-id:token-id,
@@ -117,12 +119,17 @@
   )
 
   ;-----------------------------------------------------------------------------
-  ; Lcoal functions
+  ; View functions
   ;-----------------------------------------------------------------------------
   (defun get-royalty-details:object{royalty-token-sch} (token-id:string)
+    @doc "Return the details of the royalty spec for a token-id"
     (read royalty-tokens token-id))
 
+  ;-----------------------------------------------------------------------------
+  ; View functions (local only)
+  ;-----------------------------------------------------------------------------
   (defun get-royalty-details-per-creator:[object{royalty-token-sch}] (creator:string)
+    @doc "Return the details of the royalty specs of all tokens of a given creator"
     (select royalty-tokens (where 'creator-account (= creator))))
 
 )

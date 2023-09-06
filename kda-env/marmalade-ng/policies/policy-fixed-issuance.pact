@@ -11,6 +11,9 @@
   (defcap GOVERNANCE ()
     (enforce-keyset ADMIN-KEYSET))
 
+  ;-----------------------------------------------------------------------------
+  ; Schemas and Tables
+  ;-----------------------------------------------------------------------------
   (defschema fixed-issuance-sch
     max-supply:decimal
     min-mint-amount:decimal
@@ -18,16 +21,22 @@
 
   (deftable supplies:{fixed-issuance-sch})
 
-  (defschema fixed-issuance-msg-sch
-    max_supply:decimal
-    min_mint_amount:decimal
-    precision:integer
-  )
 
+  ;-----------------------------------------------------------------------------
+  ; Input data
+  ;-----------------------------------------------------------------------------
+  (defschema fixed-issuance-msg-sch
+    max_supply:decimal ; Total allowed max supply of the token
+    min_mint_amount:decimal ;Minimum allowed mint amount
+    precision:integer ;Precision of the token
+  )
 
   (defun read-fixed-supply-msg:object{fixed-issuance-msg-sch} (token:object{token-info})
     (enforce-get-msg-data "fixed_supply" token))
 
+  ;-----------------------------------------------------------------------------
+  ; Policy hooks
+  ;---------------------------------------------------------------------------
   (defun rank:integer ()
     0)
 
@@ -77,6 +86,9 @@
   (defun enforce-sale-settle:bool (token:object{token-info})
     true)
 
+  ;-----------------------------------------------------------------------------
+  ; View functions
+  ;-----------------------------------------------------------------------------
   (defun get-issuance-spec:object{fixed-issuance-sch} (token-id:string)
     (read supplies token-id))
 

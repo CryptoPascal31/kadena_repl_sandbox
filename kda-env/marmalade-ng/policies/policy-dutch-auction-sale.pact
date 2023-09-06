@@ -206,7 +206,14 @@
         false))
 
   ;-----------------------------------------------------------------------------
-  ; Lcoal functions
+  ; View functions
+  ;-----------------------------------------------------------------------------
+  (defun get-sale:object{quote-sch} (sale-id:string)
+    @doc "Returns the sale data of a prticular sale-id"
+    (read quotes sale-id))
+
+  ;-----------------------------------------------------------------------------
+  ; View functions (local only)
   ;-----------------------------------------------------------------------------
   (defun get-all-active-sales:[object{quote-sch}] ()
     @doc "Returns all currently active sales"
@@ -217,8 +224,6 @@
     (select quotes (and? (where 'enabled (=  true))
                          (where 'token-id (= token-id)))))
 
-  (defun get-sale:object{quote-sch} (sale-id:string)
-    @doc "Returns the sale data of a prticular sale-id"
-    (read quotes sale-id))
+
 
 )
