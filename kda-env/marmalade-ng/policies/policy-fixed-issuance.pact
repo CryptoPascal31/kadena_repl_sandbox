@@ -91,5 +91,4 @@
   ;-----------------------------------------------------------------------------
   (defun get-issuance-spec:object{fixed-issuance-sch} (token-id:string)
     (read supplies token-id))
-
 )

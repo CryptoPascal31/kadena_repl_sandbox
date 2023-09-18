@@ -97,7 +97,7 @@
           ;       => transfer-create will create it
           ;   - Creator account already exists and the guard if his account is = to the registered guard
           ;        => transfer-create will transfer the funds safely
-          ;   - Creator account already exists but the guard doesn't match with the reigstered guard
+          ;   - Creator account already exists but the guard doesn't match with the registered guard
           ;        => To be sure, we don't charge the royalty
           (if (and (>= royalty-amount 0.0) (= creator-g current-creator-g))
               (let ((_ 0))
@@ -131,5 +131,4 @@
   (defun get-royalty-details-per-creator:[object{royalty-token-sch}] (creator:string)
     @doc "Return the details of the royalty specs of all tokens of a given creator"
     (select royalty-tokens (where 'creator-account (= creator))))
-
 )

@@ -147,7 +147,7 @@
     (enforce-sale-not-ended)
     ; First step to handle the buying part => Transfer the amount to the escrow account
     (with-read quotes (pact-id) {'currency:=currency:module{fungible-v2},
-                                   'price:=price}
+                                 'price:=price}
       (currency::transfer-create buyer (ledger.escrow) (ledger.escrow-guard) price))
     true
   )
@@ -156,7 +156,6 @@
     (if (is-registered)
         (--enforce-sale-buy token buyer)
         false))
-
 
   (defun --enforce-sale-settle:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-SETTLE token (pact-id) policy-fixed-sale))

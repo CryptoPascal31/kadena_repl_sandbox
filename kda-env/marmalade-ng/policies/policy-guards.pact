@@ -26,7 +26,6 @@
   ;-----------------------------------------------------------------------------
   ; Input data
   ;-----------------------------------------------------------------------------
-
   ; For this policy the input data schema is shared with the in-table schema
   (defun read-guards-msg:object{guards-sch} (token:object{token-info})
     (enforce-get-msg-data "guards" token))
@@ -114,5 +113,4 @@
 
   (defun get-guards:object{guards-sch} (token-id:string)
     (read guards token-id))
-
 )

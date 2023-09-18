@@ -80,6 +80,4 @@
     (enforce (> price 0.0) "price must be positive")
     (currency::enforce-unit price)
   )
-
-
 )

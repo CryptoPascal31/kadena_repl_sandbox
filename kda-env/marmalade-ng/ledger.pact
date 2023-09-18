@@ -12,15 +12,17 @@
   ; Tables and schema
   ;-----------------------------------------------------------------------------
   ; The ledger itself: Store Tokens - Accounts correspondance
+  ; acount-details is define in the ledger interface
   (deftable ledger:{account-details})
 
   ; Store tokens data
+  ; Only supply can be modified. All other fields of this stored object are immutable
   (defschema token-schema
-    id:string
-    uri:string
-    precision:integer
-    supply:decimal
-    policies:[module{token-policy-ng-v1}]
+    id:string ; Id of the token
+    uri:string ; URI of the token
+    precision:integer ; Precsion = Number of decimals of the token.
+    supply:decimal ; Total supply of the token
+    policies:[module{token-policy-ng-v1}] ; List of policies attached to a token
   )
   (deftable tokens:{token-schema})
 
@@ -34,14 +36,17 @@
   ;-----------------------------------------------------------------------------
   ; Some utility constants
   ;-----------------------------------------------------------------------------
+  ; Constant used by the RECONCILE event for a mint or a burn
   (defconst NO-BALANCE-CHANGE {'account:"", 'previous: 0.0, 'current: 0.0})
+
+  ; Constant used for sales, that represents a no timeout
   (defconst NO-TIMEOUT:time (time "0000-01-01T00:00:00Z"))
 
   ;-----------------------------------------------------------------------------
   ; Events
   ;-----------------------------------------------------------------------------
   (defcap SUPPLY:bool (id:string supply:decimal)
-    @doc "Emitted when supply is updated, if supported."
+    @doc "Emitted when supply is updated"
     @event
     true)
 
@@ -66,33 +71,43 @@
   ; Ledger Caps
   ;-----------------------------------------------------------------------------
   (defcap DEBIT (id:string sender:string)
+    @doc "Internal capability to allow the debit of an account \
+        \ Can only be acquired by composing"
     (enforce-guard (account-guard id sender)))
 
   (defcap CREDIT (id:string receiver:string)
+    @doc "Internal capability to allow the credit of an account \
+        \ Can only be acquired by composing"
     true)
 
   (defcap UPDATE_SUPPLY (id:string)
+    @doc "Internal capability to allow updating the supply field of a token \
+        \ Can only be acquired by composing (by MINT or BURN)"
     true)
 
   (defcap MINT (id:string account:string amount:decimal)
-    @managed ;; one-shot for a given amount
+    @doc "Managed capability which must be installed externally to allow minting"
+    @managed
     (compose-capability (CREDIT id account))
     (compose-capability (UPDATE_SUPPLY id))
   )
 
   (defcap BURN (id:string account:string amount:decimal)
-    @managed ;; one-shot for a given amount
+    @doc "Managed capability which must be installed externally to allow minting"
+    @managed
     (compose-capability (DEBIT id account))
     (compose-capability (UPDATE_SUPPLY id))
   )
 
   (defcap TRANSFER:bool (id:string sender:string receiver:string amount:decimal)
+    @doc "Managed capability which must be installed externally to allow transfers"
     @managed amount TRANSFER-mgr
     (compose-capability (DEBIT id sender))
     (compose-capability (CREDIT id receiver))
   )
 
   (defcap XTRANSFER:bool (id:string sender:string receiver:string target-chain:string amount:decimal)
+    @doc "Not used, since X-chain transfers managed my the ledger are not supported"
     @managed amount TRANSFER-mgr
     (enforce false "cross chain not supported")
   )
@@ -145,8 +160,12 @@
 
   (defun enforce-token-reserved:bool (id:string token-uri:string creation-guard:guard)
     @doc "Enforce reserved id name protocols."
+    ; Enforce the creation guard
     (with-capability (ENFORCE-RESERVED)
       (enforce-guard creation-guard))
+
+    ; Check that the token name starts with "t:", recomputes the token-id by
+    ; ourselves and verify that it does match with one one given by the creator
     (if (starts-with id "t:")
         (enforce (= id (create-token-id creation-guard token-uri)) "Token protocol violation")
         (enforce false "Unrecognized reserved protocol"))
@@ -266,6 +285,11 @@
 
   (defun sort-policies:[module{token-policy-ng-v1}] (in:[module{token-policy-ng-v1}])
     @doc "Technical function to deduplicate, and sort policies by rank"
+    ; Processing:
+    ;  - Remove duplicates (distinct)
+    ;    |-> Convert to object list {'p:policy, 'r:rank}
+    ;         |-> Sort by 'r
+    ;             |-> Extract 'p from the object
     (let ((zip-rank (lambda (pol:module{token-policy-ng-v1}) {'r:(pol::rank), 'p:pol})))
       (compose (compose (distinct)
                         (map (zip-rank)))
@@ -278,6 +302,9 @@
   (defun create-token:bool (id:string precision:integer uri:string
                             policies:[module{token-policy-ng-v1}]
                             creation-guard:guard)
+    @doc "Create a token with a given token-id"
+    ; First we verify that the token-id is correct, regarding the uti and the
+    ; creation gyard
     (enforce-token-reserved id uri creation-guard)
     (let* ((_policies (sort-policies policies))
            (token-info {'id:id, 'uri:uri, 'precision:precision, 'supply:0.0})
@@ -285,12 +312,15 @@
                                 ;(install-capability (POLICY-ENFORCE-INIT token-info m))
                                 (with-capability (POLICY-ENFORCE-INIT token-info m)
                                   (m::enforce-init token-info)))))
+      ; Call the creation policies
       (map (call-policy) _policies)
+      ; Insert the token into the database
       (insert tokens id {'id: id,
                                'uri: uri,
                                'precision: precision,
                                'supply: 0.0,
                                'policies: _policies})
+      ; And emit the corresponding event
       (emit-event (TOKEN-CREATE id uri precision _policies)))
   )
 
@@ -301,10 +331,14 @@
     true)
 
   (defun transfer:bool (id:string sender:string receiver:string amount:decimal)
+    @doc "Transfer a token amount from a sender to a receiver"
+    ; We read first the current guard and then delegates evrything to transfer-create
     (with-read ledger (key id receiver) {'guard:=g}
       (transfer-create id sender receiver g amount)))
 
   (defun transfer-create:bool (id:string sender:string receiver:string receiver-guard:guard amount:decimal)
+  @doc "Transfer a token amount from a sender to a receiver"
+    ; Check that both accounts and the amount are valid.
     (enforce-valid-transfer sender receiver (precision id) amount)
 
     (let* ((policies (get-policies id))
@@ -312,16 +346,20 @@
            (call-policy (lambda (m:module{token-policy-ng-v1})
                                 (with-capability (POLICY-ENFORCE-TRANSFER token-info m)
                                   (m::enforce-transfer token-info sender receiver amount)))))
+      ; Call the policies
       (map (call-policy) policies))
 
+    ; Do the transfer by debiting the sender and crediting the receiver
     (with-capability (TRANSFER id sender receiver amount)
       (let ((s-bal-change (debit id sender amount))
             (r-bal-change (credit id receiver receiver-guard amount)))
+        ; Emit the RECONCILE event
         (emit-event (RECONCILE id amount s-bal-change r-bal-change))))
   )
 
   (defpact transfer-crosschain:bool (id:string sender:string receiver:string receiver-guard:guard
                                      target-chain:string amount:decimal)
+    @doc "Not used, since X-chain transfers managed my the ledger are not supported"
     (step (enforce false "cross chain not supported")))
 
   ;-----------------------------------------------------------------------------
@@ -331,7 +369,9 @@
     true)
 
   (defun mint:bool (id:string account:string guard:guard amount:decimal)
+    ; Check that the account is valid
     (enforce-valid-account account)
+    ; Check that the amount is positive and check the decimals
     (enforce-valid-amount (precision id) amount)
 
     (let* ((policies (get-policies id))
@@ -339,10 +379,13 @@
            (call-policy (lambda (m:module{token-policy-ng-v1})
                                 (with-capability (POLICY-ENFORCE-MINT token-info m)
                                   (m::enforce-mint token-info account amount)))))
+      ; Call the policies
       (map (call-policy) policies))
 
       (with-capability (MINT id account amount)
+        ; Update the supply
         (update-supply id amount)
+        ; And emit the RECONCILE event
         (let ((bal-change (credit id account guard amount)))
           (emit-event (RECONCILE id amount NO-BALANCE-CHANGE bal-change))))
   )
@@ -354,6 +397,7 @@
     true)
 
   (defun burn:bool (id:string account:string amount:decimal)
+    ; Check that the amount is positive and check the decimals
     (enforce-valid-amount (precision id) amount)
 
     (let* ((policies (get-policies id))
@@ -361,13 +405,34 @@
            (call-policy (lambda (m:module{token-policy-ng-v1})
                                 (with-capability (POLICY-ENFORCE-BURN token-info m)
                                   (m::enforce-burn token-info account amount)))))
+      ; Call the policies
       (map (call-policy) policies))
 
       (with-capability (BURN id account amount)
+        ; Update the supply
         (update-supply id (- amount))
+        ; And emit the RECONCILE event
         (let ((bal-change (debit id account amount)))
           (emit-event (RECONCILE id amount bal-change NO-BALANCE-CHANGE))))
   )
+
+  ;-----------------------------------------------------------------------------
+  ; Escrow accounts management
+  ;-----------------------------------------------------------------------------
+
+  ; Note that the escrow account is guarded by a capabilty-pact-guard.
+  ; This capability can only be accessed with a specific defpact; and thus
+  ; parameterizing the capability is not necessary
+  (defcap ESCROW ()
+    true)
+
+  (defun escrow-guard:guard ()
+    @doc "Return the guard of the escrow account"
+    (create-capability-pact-guard (ESCROW)))
+
+  (defun escrow:string ()
+    @doc "Return the escrow account"
+    (create-principal (escrow-guard)))
 
   ;-----------------------------------------------------------------------------
   ; Public Marmalade functions => Sale
@@ -388,51 +453,63 @@
     ;@managed
     true)
 
-  (defcap ESCROW ()
-    true)
 
-  (defun escrow-guard:guard ()
-     (create-capability-pact-guard (ESCROW)))
-
-  (defun escrow:string ()
-    (create-principal (escrow-guard)))
 
   (defpact sale:bool (id:string seller:string amount:decimal timeout:time)
     (step-with-rollback
       ;; Step 0: offer
+      ;; -------------
       (let* ((policies (get-policies id))
              (token-info (get-token-info id))
              (call-policy (lambda (m:module{token-policy-ng-v1})
                                   ;(install-capability (POLICY-ENFORCE-OFFER token-info (pact-id) m))
                                   (with-capability (POLICY-ENFORCE-OFFER token-info (pact-id) m)
                                     (m::enforce-sale-offer token-info seller amount timeout)))))
+
+        ; Check that the amount is positive and check the decimals
         (enforce-valid-amount (precision id) amount)
+
+        ; Check that the account is valid
         (enforce-valid-account seller)
+
+        ; Check that the timeout is NO-TIMEOUT or in the future
+        ; A policy may dp additional checks on this timeout
         (enforce (or? (is-future) (= NO-TIMEOUT) timeout) "Timeout must be in future")
 
+        ; Call the policies => All the returns values are ORed using fold.
+        ; This ensures that at least one policy has handled the sale
         (let ((offer-handled (fold (or) false (map (call-policy) policies))))
           (enforce offer-handled "No policy to handle the offer"))
 
+        ; Transfer the token to the escorw account
         (with-capability (SALE id seller amount timeout (pact-id))
           (let ((snd-bal (debit id seller amount))
                 (rcv-bal (credit id (escrow) (escrow-guard) amount)))
             (emit-event (RECONCILE id amount snd-bal rcv-bal)))))
+        ; The first part of the PACT is finished
 
-      ;;Step 0, rollback: withdraw
+      ;;Step 0: rollback
+      ;; ---------------
+      ; Withdraw: we have to refund the seller and give him back the token
       (let* ((policies (get-policies id))
              (token-info (get-token-info id))
              (call-policy (lambda (m:module{token-policy-ng-v1})
                                   ;(install-capability (POLICY-ENFORCE-WITHDRAW token-info (pact-id) m))
                                   (with-capability (POLICY-ENFORCE-WITHDRAW token-info (pact-id) m)
                                     (m::enforce-sale-withdraw token-info)))))
+        ; Call the policies
         (map (call-policy) policies)
+
+        ; And transfer back the token to the seller
         (with-capability (WITHDRAW id seller amount)
           (let ((snd-bal (debit id (escrow) amount))
                 (rcv-bal (credit id seller (account-guard id seller) amount)))
             (emit-event (RECONCILE id amount snd-bal rcv-bal)))))
+        ; The PACT is definitvely closed
     )
     (step
       ;; Step 1: buy and settle payments
+      ;; -------------------------------
       (let* ((policies (get-policies id))
              (token-info (get-token-info id))
              (buyer:string (read-string "buyer"))
@@ -445,12 +522,24 @@
                                   ;(install-capability (POLICY-ENFORCE-SETTLE token-info (pact-id) m))
                                   (with-capability (POLICY-ENFORCE-SETTLE token-info (pact-id) m)
                                                    (m::enforce-sale-settle token-info)))))
+
+            ; Check the validity of the buyer account
             (enforce-valid-account buyer)
+
+            ; Call the sale-buy hooks of the policies
+            ; The policies must check here that the buyer is OK and the sale
+            ; ready to be settled
             (map (call-buy) policies)
+
+            ; Transfer the token from the ecrow to the buyer;
+            ; Here the BUY capability allows to access to the escrow account
             (with-capability (BUY id seller buyer amount)
               (let ((snd-bal (debit id (escrow) amount))
                     (rcv-bal (credit id buyer buyer-guard amount)))
                 (emit-event (RECONCILE id amount snd-bal rcv-bal))))
+
+            ; Now call the sale-setlle hooks of the policy to finish the job
+            ; The capability ESCROW allow us to access the escrow account.
             (with-capability (ESCROW)
               (map (call-settle) policies))
             true)

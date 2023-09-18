@@ -146,10 +146,10 @@
           (enforce (> increment-ratio 1.0) "Increment must be > 1")
           ; Auction sale does not support no-timeout
           (enforce (!= NO-TIMEOUT timeout) "No timeout not supported for auction sale")
-          ; Check that the recipient account is valid and already exist in the currency
+          ; Check that the recipient account is valid and already exists in the currency
           (check-fungible-account currency recipient)
 
-          ; Insert teh quote intor the DB.
+          ; Insert the quote into the DB.
           (insert auctions (pact-id) {'sale-id: (pact-id),
                                       'token-id: (at 'id token),
                                       'amount:amount,
@@ -191,8 +191,8 @@
                                    'current-price:=current-price,
                                    'current-buyer:=current-buyer}
 
-      ; Check that the current-price is != 0. It means that someone has placed a bid
-      (enforce (>= current-price 0.0) "No bid")
+      ; Check that the buyer is different from EMPTY. It means that someone has placed a bid
+      (enforce (!= current-buyer "") "No bid")
 
       ; Check that the buyer that placed the bid is the same as the one that is currently
       ;    claiming the tokens
@@ -289,7 +289,6 @@
     @doc "Return the details of a sale"
     (read auctions sale-id))
 
-
   ;-----------------------------------------------------------------------------
   ; View functions (local only)
   ;-----------------------------------------------------------------------------
@@ -298,11 +297,13 @@
     (select auctions (and? (where 'timeout (is-future))
                            (where 'enabled (= true)))))
 
+  (defun get-ended-sales:[object{auction-sch}] ()
+    @doc "Return the ended sales (timeout elapsed), but not settled"
+    (select auctions (and? (where 'timeout (is-past))
+                           (where 'enabled (= true)))))
+
   (defun get-sales-for-token:[object{auction-sch}] (token-id:string)
     @doc "Return all active sales managed by this policy for a given token-id"
     (select auctions (and? (where 'enabled (= true))
                            (where 'token-id (= token-id)))))
-
-
-
 )

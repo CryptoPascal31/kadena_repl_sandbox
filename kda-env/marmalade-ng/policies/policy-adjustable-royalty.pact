@@ -127,7 +127,7 @@
           ;       => transfer-create will create it
           ;   - Creator account already exists and the guard if his account is = to the registered guard
           ;        => transfer-create will transfer the funds safely
-          ;   - Creator account already exists but the guard doesn't math with the reigstered guard
+          ;   - Creator account already exists but the guard doesn't match with the registered guard
           ;        => To be sure, we don't charge the royalty
           (if (and (>= royalty-amount 0.0) (= creator-g current-creator-g))
               (let ((_ 0))

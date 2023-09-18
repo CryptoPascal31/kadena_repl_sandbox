@@ -42,6 +42,4 @@
 
   (defun enforce-sale-settle:bool (token:object{token-info})
     true)
-
-
 )
