@@ -26,6 +26,14 @@
   (deftable marketplace-sales:{marketplace-sale-sch})
 
   ;-----------------------------------------------------------------------------
+  ; Events
+  ;-----------------------------------------------------------------------------
+  (defcap MARKETPLACE-PAID (token-id:string marketplace-account:string marketplace-hash:string amount:decimal)
+    @doc "Event emitted when a fee is paid to the marketplace"
+    @event
+    true)
+
+  ;-----------------------------------------------------------------------------
   ; Input data
   ;-----------------------------------------------------------------------------
   (defschema marketplace-fee-sch
@@ -64,16 +72,11 @@
                     (<= min-fee max-fee)) "Illegal Min/Max fee")
 
       ; Is fee-rate is between 0.0 and 1.0 ?
-      (enforce (between 0.0 1.0 fee-rate) "Illegal fee rate")
+      (enforce-valid-rate fee-rate)
 
       ; Is the payment account OK ?
       (check-fungible-account currency account))
   )
-
-  (defun disable:bool ()
-      @doc "Mark the sale as being disabled"
-      (update marketplace-sales (pact-id) {'enabled: false})
-      true)
 
   ;-----------------------------------------------------------------------------
   ; Policy hooks
@@ -117,7 +120,13 @@
 
   (defun enforce-sale-withdraw:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-WITHDRAW token (pact-id) policy-marketplace))
-    (disable)
+    ; Check whether marketplace policy has been activated for this sale
+    (with-default-read marketplace-sales (pact-id) {'marketplace-hash:"DEFAULT-HASH"} {'marketplace-hash:=mh}
+      (if (!= mh "DEFAULT-HASH")
+          ; If yes, flag the sale as disabled (=ended)
+          (update marketplace-sales (pact-id) {'enabled: false})
+          ""))
+    true
   )
 
   (defun enforce-sale-buy:bool (token:object{token-info} buyer:string)
@@ -125,27 +134,30 @@
 
   (defun enforce-sale-settle:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-SETTLE token (pact-id) policy-marketplace))
-    (with-default-read marketplace-sales (pact-id) {'marketplace-fee:DEFAULT-MARKETPLACE-FEE}
-                                                   {'marketplace-fee:=marketplace-fee}
-      (if (!= marketplace-fee DEFAULT-MARKETPLACE-FEE)
-          (bind marketplace-fee {'marketplace-account:=account,
-                                  'currency:=currency:module{fungible-v2},
-                                  'min-fee:=min-fee,
-                                  'fee-rate:=fee-rate,
-                                  'max-fee:=max-fee}
+    (with-default-read marketplace-sales (pact-id) {'marketplace-fee:DEFAULT-MARKETPLACE-FEE,
+                                                    'marketplace-hash:"DEFAULT-HASH"}
+                                                   {'marketplace-fee:=market-fee,
+                                                    'marketplace-hash:=market-hash}
+      (if (!= market-hash "DEFAULT-HASH")
+          (bind market-fee {'marketplace-account:=account,
+                            'currency:=currency:module{fungible-v2},
+                            'min-fee:=min-fee,
+                            'fee-rate:=fee-rate,
+                            'max-fee:=max-fee}
 
             (let* ((escrow (ledger.escrow))
                    (escrow-balance (currency::get-balance escrow))
                    (amount (clamp min-fee max-fee  (* fee-rate escrow-balance)))
                    (amount (floor amount (currency::precision))))
 
-              (if (>= amount 0.0)
+              (if (> amount 0.0)
                   (let ((_ 0))
-                    (install-capability (currency::TRANSFER escrow account amount))
+                    (install-capability (currency::TRANSFER escrow account escrow-balance))
                     (currency::transfer escrow account amount)
-                    true)
+                    (emit-event (MARKETPLACE-PAID (at 'id token) account market-hash amount)))
                   true))
-            (disable))
+            (update marketplace-sales (pact-id) {'enabled: false})
+            true)
           true))
     )
 

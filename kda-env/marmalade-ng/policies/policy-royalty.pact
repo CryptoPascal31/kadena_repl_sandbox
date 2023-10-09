@@ -2,6 +2,8 @@
   (implements token-policy-ng-v1)
   (use token-policy-ng-v1 [token-info])
   (use util-policies)
+  (use free.util-fungible [enforce-valid-account])
+  (use free.util-strings [to-string])
 
   ;-----------------------------------------------------------------------------
   ; Governance
@@ -19,6 +21,7 @@
     creator-account:string
     creator-guard:guard
     rate:decimal
+    currencies:[module{fungible-v2}]
   )
 
   (deftable royalty-tokens:{royalty-token-sch})
@@ -31,16 +34,37 @@
   (deftable royalty-sales:{royalty-sale-sch})
 
   ;-----------------------------------------------------------------------------
+  ; Capabilities and events
+  ;-----------------------------------------------------------------------------
+  (defcap ROYALTY-PAID (token-id:string creator-account:string amount:decimal)
+    @doc "Event emitted when a royalty is paid to a creator"
+    @event
+    true)
+
+  (defcap UPDATE-ROYALTY (token-id:string)
+    @doc "Capability to modify the royalty"
+    (with-read royalty-tokens token-id {'creator-guard:=current-guard}
+      (enforce-guard current-guard))
+  )
+
+  ;-----------------------------------------------------------------------------
   ; Input data
   ;-----------------------------------------------------------------------------
   (defschema royalty-init-msg-sch
     creator_acct:string
     creator_guard:guard
     rate:decimal
+    currencies:[module{fungible-v2}]
   )
 
   (defun read-royalty-init-msg:object{royalty-init-msg-sch} (token:object{token-info})
     (enforce-get-msg-data "royalty" token))
+
+  ;-----------------------------------------------------------------------------
+  ; Util functions
+  ;-----------------------------------------------------------------------------
+  (defun enforce-valid-fungibles:bool (currencies:[module{fungible-v2}])
+    (enforce (and? (< 0) (>= 20) (length currencies)) "Incorrect currencies list"))
 
   ;-----------------------------------------------------------------------------
   ; Policy hooks
@@ -51,10 +75,14 @@
     (require-capability (ledger.POLICY-ENFORCE-INIT token policy-royalty))
     (let ((royalty-init-msg (read-royalty-init-msg token))
           (token-id (at 'id token)))
-      (bind royalty-init-msg {'creator_acct:=c-a, 'creator_guard:=c-g, 'rate:=rate}
+      (bind royalty-init-msg {'creator_acct:=c-a, 'creator_guard:=c-g, 'rate:=rate, 'currencies:=cur}
+        (enforce-valid-account c-a)
+        (enforce-valid-rate rate)
+        (enforce-valid-fungibles cur)
         (insert royalty-tokens token-id {'token-id:token-id,
                                          'creator-account:c-a,
                                          'creator-guard:c-g,
+                                         'currencies:cur,
                                          'rate:rate})))
     true
    )
@@ -70,8 +98,18 @@
 
   (defun enforce-sale-offer:bool (token:object{token-info} seller:string amount:decimal timeout:time)
     (require-capability (ledger.POLICY-ENFORCE-OFFER token (pact-id) policy-royalty))
-    (let ((sale-msg (enforce-read-sale-msg token)))
-      (insert royalty-sales (pact-id) {'currency: (at 'currency sale-msg)}))
+    ; Read the fungible currency from the sale message
+    (bind (enforce-read-sale-msg token) {'currency:=currency}
+      ; Fetch from the database the allowed currencies for this token
+      (with-read royalty-tokens (at 'id token) {'currencies:=allowed-currencies}
+        ; And finally check that the requested currency is allowed
+        ; Because of https://github.com/kadena-io/pact/issues/1307
+        ;   until this one will be fixed, we have to compare by stringified versions
+        (enforce (contains (to-string currency) (map (to-string) allowed-currencies))
+                 "Currency is not allowed"))
+                 
+      ;Store the currency for this sale-id => This will be needed during (enforce-settle)
+      (insert royalty-sales (pact-id) {'currency: currency}))
     false ; We always return false because the royalty policy does not handle a sale
   )
 
@@ -99,23 +137,30 @@
           ;        => transfer-create will transfer the funds safely
           ;   - Creator account already exists but the guard doesn't match with the registered guard
           ;        => To be sure, we don't charge the royalty
-          (if (and (>= royalty-amount 0.0) (= creator-g current-creator-g))
+          (if (and (> royalty-amount 0.0) (= creator-g current-creator-g))
               (let ((_ 0))
-                (install-capability (currency::TRANSFER escrow creator-a royalty-amount))
+                (install-capability (currency::TRANSFER escrow creator-a escrow-balance))
                 (currency::transfer-create escrow creator-a creator-g royalty-amount)
-                true)
+                (emit-event (ROYALTY-PAID (at 'id token) creator-a royalty-amount)))
               false))))
     )
 
   ;-----------------------------------------------------------------------------
-  ; Allow creator to change the account / guard
+  ; External callable admin functions
   ;-----------------------------------------------------------------------------
   (defun rotate:string (token-id:string creator-account:string creator-guard:guard)
     @doc "Change/rotate the creator-account/creator-guard of the given tokenID"
-    (with-read royalty-tokens token-id {'creator-guard:=current-guard}
-      (enforce-guard current-guard))
-    (update royalty-tokens token-id {'creator-account:creator-account,
-                                     'creator-guard:creator-guard})
+    (enforce-valid-account creator-account)
+    (with-capability (UPDATE-ROYALTY token-id)
+      (update royalty-tokens token-id {'creator-account:creator-account,
+                                       'creator-guard:creator-guard}))
+  )
+
+  (defun update-allowed-currencies:string (token-id:string currencies:[module{fungible-v2}])
+    @doc "Change the list of allowed currencies"
+    (enforce-valid-fungibles currencies)
+    (with-capability (UPDATE-ROYALTY token-id)
+      (update royalty-tokens token-id {'currencies:currencies}))
   )
 
   ;-----------------------------------------------------------------------------

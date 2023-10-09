@@ -26,6 +26,7 @@
   (defschema quote-sch
     sale-id:string
     token-id:string
+    seller:string
     seller-guard:guard
     amount:decimal
     escrow-account:string
@@ -97,11 +98,6 @@
         (floor price (currency::precision))))
   )
 
-  (defun disable:bool ()
-    @doc "Mark the sale as being disabled"
-    (update quotes (pact-id) {'enabled: false})
-    true)
-
   (defun read-dutch-quote-msg:object{dutch-quote-msg-sch} (token:object{token-info})
     (enforce-get-msg-data "dutch_quote" token))
 
@@ -138,12 +134,13 @@
 
             (enforce (< end-price start-price) "end-price must be less than start-price")
 
-            ; Check that the recipient account already exist in the currency
+            ; Check that the recipient account already exists in the currency
             (check-fungible-account currency recipient)
 
-            ; Insert teh quote intor the DB.
+            ; Insert the quote into the DB
             (insert quotes (pact-id) {'sale-id: (pact-id),
                                       'token-id: (at 'id token),
+                                      'seller: seller,
                                       'seller-guard: (account-guard (at 'id token) seller),
                                       'amount:amount,
                                       'escrow-account: (ledger.escrow),
@@ -163,7 +160,9 @@
     (require-capability (ledger.POLICY-ENFORCE-WITHDRAW token (pact-id) policy-dutch-auction-sale))
     (enforce-sale-ended)
     (enforce-seller-guard)
-    (disable)
+    ; Disable the sale
+    (update quotes (pact-id) {'enabled: false})
+    true
   )
 
   (defun enforce-sale-withdraw:bool (token:object{token-info})
@@ -190,14 +189,17 @@
     (with-read quotes (pact-id) {'amount:=amount,
                                  'currency:=currency:module{fungible-v2},
                                  'recipient:=recipient}
-      ; The settle handler is called in the same transaction as the handler buy
+      ; The (enforce-settle) handler is called in the same transaction
+      ; as the (enforce-buy) handler
       ; => Checking the timeout is not necessary
       ; Transfer the remaining from the escrow account to the recipient
       (let* ((escrow (ledger.escrow))
              (amount (currency::get-balance escrow)))
         (install-capability (currency::TRANSFER escrow recipient amount))
         (currency::transfer escrow recipient amount)))
-    (disable)
+    ; Disable the sale
+    (update quotes (pact-id) {'enabled: false})
+    true
   )
 
   (defun enforce-sale-settle:bool (token:object{token-info})
@@ -218,6 +220,11 @@
   (defun get-all-active-sales:[object{quote-sch}] ()
     @doc "Returns all currently active sales"
     (select quotes (where 'enabled (=  true))))
+
+  (defun get-sales-from-account:[object{quote-sch}] (account:string)
+    @doc "Return all currently active sales from an account"
+    (select quotes (and? (where 'enabled (=  true))
+                         (where 'seller (= account)))))
 
   (defun get-sales-for-token:[object{quote-sch}] (token-id:string)
     @doc "Returns all currently actives sales related to a token"

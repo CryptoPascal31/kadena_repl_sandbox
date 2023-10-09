@@ -50,7 +50,7 @@
     @event
     true)
 
-  (defcap TOKEN-CREATE:bool (id:string uri:string precision:integer policies:[module{token-policy-ng-v1}])
+  (defcap TOKEN-CREATE:bool (id:string uri:string precision:integer policies:[string])
     @doc "Emitted when a token is created"
     @event
     true)
@@ -63,7 +63,7 @@
     true)
 
   (defcap ACCOUNT_GUARD:bool (id:string account:string guard:guard)
-    @doc " Emitted when ACCOUNT guard is updated."
+    @doc "Deprecated... Not emitted anymore"
     @event
     true)
 
@@ -87,7 +87,7 @@
 
   (defcap MINT (id:string account:string amount:decimal)
     @doc "Managed capability which must be installed externally to allow minting"
-    @managed
+    @event
     (compose-capability (CREDIT id account))
     (compose-capability (UPDATE_SUPPLY id))
   )
@@ -247,7 +247,7 @@
                                      'guard:guard,
                                      'id:id,
                                      'account:account})
-    (emit-event (ACCOUNT_GUARD id account guard))
+    true
   )
 
   (defun get-balance:decimal (id:string account:string)
@@ -316,12 +316,12 @@
       (map (call-policy) _policies)
       ; Insert the token into the database
       (insert tokens id {'id: id,
-                               'uri: uri,
-                               'precision: precision,
-                               'supply: 0.0,
-                               'policies: _policies})
+                         'uri: uri,
+                         'precision: precision,
+                         'supply: 0.0,
+                         'policies: _policies})
       ; And emit the corresponding event
-      (emit-event (TOKEN-CREATE id uri precision _policies)))
+      (emit-event (TOKEN-CREATE id uri precision (map (to-string) _policies))))
   )
 
   ;-----------------------------------------------------------------------------
@@ -466,6 +466,11 @@
                                   (with-capability (POLICY-ENFORCE-OFFER token-info (pact-id) m)
                                     (m::enforce-sale-offer token-info seller amount timeout)))))
 
+        ; We doesn't allow nested pacts =>  A parent Pact could manage a "side-contract" allowing
+        ; the buyer and the seller to bypass fees and royalties
+        ; In a nested pact, the pact-id is different than the Tx Hash
+        (enforce (= (tx-hash) (pact-id)) "Nested pact not allowed")
+
         ; Check that the amount is positive and check the decimals
         (enforce-valid-amount (precision id) amount)
 
@@ -473,15 +478,15 @@
         (enforce-valid-account seller)
 
         ; Check that the timeout is NO-TIMEOUT or in the future
-        ; A policy may dp additional checks on this timeout
+        ; A policy may do additional checks on this timeout
         (enforce (or? (is-future) (= NO-TIMEOUT) timeout) "Timeout must be in future")
 
         ; Call the policies => All the returns values are ORed using fold.
-        ; This ensures that at least one policy has handled the sale
+        ; This ensures that at least one policy has handled the sale.
         (let ((offer-handled (fold (or) false (map (call-policy) policies))))
           (enforce offer-handled "No policy to handle the offer"))
 
-        ; Transfer the token to the escorw account
+        ; Transfer the token to the escrow account
         (with-capability (SALE id seller amount timeout (pact-id))
           (let ((snd-bal (debit id seller amount))
                 (rcv-bal (credit id (escrow) (escrow-guard) amount)))
@@ -574,7 +579,6 @@
                                         'guard:guard,
                                         'id:id,
                                         'account:account})
-        (if is-new (emit-event (ACCOUNT_GUARD id account guard)) true)
         {'account: account, 'previous: old-bal, 'current: new-bal}))
     )
 )

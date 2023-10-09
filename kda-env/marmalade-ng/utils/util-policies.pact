@@ -1,5 +1,6 @@
 (module util-policies GOVERNANCE
   (use token-policy-ng-v1 [token-info])
+  (use free.util-math [xEy between])
   (use free.util-fungible [enforce-valid-account])
 
   ;-----------------------------------------------------------------------------
@@ -76,8 +77,18 @@
                (format "Account {} does not exist" [acct])))
   )
 
+  ; Price is limited to 1.10^12
+  (defconst MAXIMUM-PRICE:decimal (xEy 1.0 12))
+
   (defun check-price:bool (currency:module{fungible-v2} price:decimal)
-    (enforce (> price 0.0) "price must be positive")
+    (enforce (and? (< 0.0) (>= MAXIMUM-PRICE) price) "Price out of range")
     (currency::enforce-unit price)
   )
+
+  (defun enforce-valid-rate:bool (rate:decimal)
+    @doc "Enforce that a rate is between 0.0 and 1.0"
+    (enforce (between 0.0 1.0 rate) "Rate must be between 0.0 and 1.0")
+  )
+
+
 )

@@ -10,7 +10,6 @@
   (defcap GOVERNANCE ()
     (enforce-keyset ADMIN-KEYSET))
 
-
   ;-----------------------------------------------------------------------------
   ; Schemas and Tables
   ;-----------------------------------------------------------------------------
@@ -60,7 +59,6 @@
     @doc "Enforce that an account is not blacklisted for a token"
     (let* ((token-id (at 'id token))
            (is-bl (is-blacklisted token-id account)))
-      ;(enforce false (format "{}/{}/{}" [token-id account is-bl]))
       (enforce (not is-bl) "Account in blacklist"))
   )
 
@@ -84,12 +82,10 @@
     (enforce-not-blacklisted token account)
   )
 
-
   (defun enforce-burn:bool (token:object{token-info} account:string amount:decimal)
     (require-capability (ledger.POLICY-ENFORCE-BURN token policy-blacklist))
     (enforce-not-blacklisted token account)
   )
-
 
   (defun enforce-transfer:bool (token:object{token-info} sender:string receiver:string amount:decimal)
     (require-capability (ledger.POLICY-ENFORCE-TRANSFER token policy-blacklist))
