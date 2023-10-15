@@ -18,12 +18,12 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.7")
+  (defconst VERSION:string "0.8pre1")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
 
-  (use util-lists [replace-item first last append-last replace-last])
+  (use util-lists [replace-item first last append-last insert-first replace-last search])
 
   (defconst ASCII-TABLE  {" ":32, "!":33, "\"":34, "#":35, "$":36, "%":37, "&":38, "\'":39,
                           "(":40, ")":41, "*":42, "+":43, ",":44, "-":45, ".":46, "/":47,
@@ -150,14 +150,13 @@
   )
 
   (defun split:[string] (separator:string in:string)
-    "Split a string using a separator. Returns a list of substrings. Separator can only be a single char"
     (if (= 0 (length in))
-        [] ;If the string is empty return a zero length list
-        (let ((process-char (lambda (current-list char)
-                                    (if (= char separator)
-                                        (append-last current-list "")
-                                        (replace-last current-list (+ (last current-list) char))))))
-          (fold (process-char) [""] (str-to-list in))))
+      [] ;If the string is empty return a zero length list
+      (let* ((sep-pos (search (str-to-list in) separator))
+             (substart (map (+ 1) (insert-first sep-pos -1)))
+             (sublen  (zip (-) (append-last sep-pos 10000000) substart))
+             (cut (lambda (start len) (take len (drop start in)))))
+        (zip (cut) substart sublen)))
   )
 
   (defun split-chunks:[string] (chunk-size:integer in:string)
