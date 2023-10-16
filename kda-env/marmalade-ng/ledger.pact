@@ -1,10 +1,8 @@
 (module ledger GOVERNANCE
-
   (implements kip.poly-fungible-v3)
   (use kip.poly-fungible-v3 [account-details sender-balance-change receiver-balance-change])
-
   (use token-policy-ng-v1 [token-info])
-  (use free.util-strings)
+  (use free.util-strings [to-string starts-with])
   (use free.util-time [is-future])
   (use free.util-fungible [enforce-precision enforce-reserved enforce-valid-account enforce-valid-transfer enforce-valid-amount])
 

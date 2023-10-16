@@ -19,6 +19,21 @@
     @doc "Capability to scope a signature when withdrawing an infinite timeout sale"
     true)
 
+  (defcap FIXED-SALE-OFFER (sale-id:string token-id:string price:decimal)
+    @doc "Event sent when a fixed sale is started"
+    @event
+    true)
+
+  (defcap FIXED-SALE-BOUGHT (sale-id:string token-id:string)
+    @doc "Event sent when a fixed sale is bought"
+    @event
+    true)
+
+  (defcap FIXED-SALE-WITHDRAWN (sale-id:string token-id:string)
+    @doc "Event sent when a fixed sale is withdrawn"
+    @event
+    true)
+
   ;-----------------------------------------------------------------------------
   ; Schemas and Tables
   ;-----------------------------------------------------------------------------
@@ -111,20 +126,22 @@
             ; Check that the recipient account already exists in the currency
             (check-fungible-account currency recipient)
 
-            ; Insert the quote into the DB
-            (insert quotes (pact-id) {'sale-id: (pact-id),
-                                      'token-id: (at 'id token),
-                                      'seller: seller,
-                                      'seller-guard: (account-guard (at 'id token) seller),
-                                      'amount:amount,
-                                      'escrow-account: (ledger.escrow),
-                                      'currency: currency,
-                                      'price: price,
-                                      'recipient: recipient,
-                                      'timeout: timeout,
-                                      'enabled: true})
-              true)
-            false))
+            (bind token {'id:=token-id}
+              ; Insert the quote into the DB
+              (insert quotes (pact-id) {'sale-id: (pact-id),
+                                        'token-id: token-id,
+                                        'seller: seller,
+                                        'seller-guard: (account-guard token-id seller),
+                                        'amount:amount,
+                                        'escrow-account: (ledger.escrow),
+                                        'currency: currency,
+                                        'price: price,
+                                        'recipient: recipient,
+                                        'timeout: timeout,
+                                        'enabled: true})
+              ; Emit event always returns true
+              (emit-event (FIXED-SALE-OFFER (pact-id) token-id price))))
+          false))
   )
 
   (defun --enforce-sale-withdraw:bool (token:object{token-info})
@@ -133,7 +150,8 @@
     (enforce-seller-guard)
     ; Disable the sale
     (update quotes (pact-id) {'enabled: false})
-    true
+    ; Emit the corresponding event
+    (emit-event (FIXED-SALE-WITHDRAWN (pact-id) (at 'id token)))
   )
 
   (defun enforce-sale-withdraw:bool (token:object{token-info})
@@ -148,7 +166,8 @@
     (with-read quotes (pact-id) {'currency:=currency:module{fungible-v2},
                                  'price:=price}
       (currency::transfer-create buyer (ledger.escrow) (ledger.escrow-guard) price))
-    true
+    ; Emit the corresponding event
+    (emit-event (FIXED-SALE-BOUGHT (pact-id) (at 'id token)))
   )
 
   (defun enforce-sale-buy:bool (token:object{token-info} buyer:string)

@@ -2,8 +2,7 @@
   (implements token-policy-ng-v1)
   (use token-policy-ng-v1 [token-info])
   (use util-policies)
-  (use free.util-math)
-
+  (use free.util-math [clamp])
 
   ;-----------------------------------------------------------------------------
   ; Governance

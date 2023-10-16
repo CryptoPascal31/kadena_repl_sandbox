@@ -1,7 +1,7 @@
 (module std-policies GOVERNANCE
   (use token-policy-ng-v1 [token-info])
-  (use free.util-lists)
-  (use free.util-strings)
+  (use free.util-lists [first])
+  (use free.util-strings [join split])
 
   ;-----------------------------------------------------------------------------
   ; Governance
@@ -23,6 +23,7 @@
                                            {'name:"DISABLE-TRANSFER",  'pol:policy-disable-transfer},
                                            {'name:"DISABLE-SALE",      'pol:policy-disable-sale},
                                            {'name:"DUTCH-AUCTION-SALE",'pol:policy-dutch-auction-sale},
+                                           {'name:"EXTRA-POLICIES",    'pol:policy-extra-policies},
                                            {'name:"FIXED-SALE",        'pol:policy-fixed-sale},
                                            {'name:"FIXED-ISSUANCE",    'pol:policy-fixed-issuance},
                                            {'name:"GUARDS",            'pol:policy-guards},
@@ -33,7 +34,7 @@
 
 
   (defun default-name:string (pol:module{token-policy-ng-v1})
-    (+ "UNKNOWN_" (take 6 (int-to-str 16 (str-to-int 64 (hash pol))))))
+    (+ "UNKNOWN_" (take 16 (int-to-str 16 (str-to-int 64 (hash pol))))))
 
   (defun to-policy:module{token-policy-ng-v1} (name:string)
     @doc "Convert a name to a policy"
