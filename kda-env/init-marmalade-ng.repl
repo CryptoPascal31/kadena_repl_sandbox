@@ -48,6 +48,7 @@
 (create-table global)
 (create-table sales)
 (create-table tokens)
+(init)
 
 (load "marmalade-ng/policies/policy-fixed-issuance.pact")
 (create-table supplies)
