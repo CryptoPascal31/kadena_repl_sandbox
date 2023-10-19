@@ -94,7 +94,7 @@
 
   (defun get-guard-by-id:guard (token-id:string)
     @doc "Return the guard assiocated to a token-id"
-    (with-default-read tokens token-id {'guard:=g}
+    (with-read tokens token-id {'guard:=g}
       g))
 
   (defun get-guard:guard (token:object{token-info})
