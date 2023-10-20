@@ -230,22 +230,22 @@
       (insert global "" {'policies:[]}))
   )
 
-  (defun add-policy:string (policy:module{token-policy-ng-v1})
-    @doc "Admin function to add a policy to the extra-policies list"
+  (defun register-policy:string (policy:module{token-policy-ng-v1})
+    @doc "Admin function to register a policy to the extra-policies list"
     (with-capability  (EXTRA-POLICIES-GOVERNANCE)
       ; We use the ledger's sort function. No need to rewrite it here
       (with-read global "" {'policies:=old-pols}
         (update global "" {'policies:(ledger.sort-policies (append-last old-pols policy))})))
   )
 
-  (defun remove-policy:string (policy:module{token-policy-ng-v1})
-    @doc "Admin function to remove a policy to the extra-policies list"
+  (defun unregister-policy:string (policy:module{token-policy-ng-v1})
+    @doc "Admin function to remove a policy from the extra-policies list"
     (with-capability  (EXTRA-POLICIES-GOVERNANCE)
       (with-read global "" {'policies:=old-pols}
         (update global "" {'policies:(remove-item old-pols policy)})))
   )
 
-  (defun list-policies:[module{token-policy-ng-v1}] ()
+  (defun list-registered-policies:[module{token-policy-ng-v1}] ()
     @doc "List all global policies"
     (with-read global "" {'policies:=pols}
       pols)
