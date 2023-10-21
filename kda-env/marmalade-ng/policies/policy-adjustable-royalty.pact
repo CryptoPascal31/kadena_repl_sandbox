@@ -83,7 +83,8 @@
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
-  (defun rank:integer () 20)
+  (defun rank:integer ()
+    RANK-ROYALTY)
 
   (defun enforce-init:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-INIT token policy-adjustable-royalty))

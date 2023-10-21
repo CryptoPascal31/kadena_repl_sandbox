@@ -1,6 +1,7 @@
 (module policy-non-fungible GOVERNANCE
   (implements token-policy-ng-v1)
   (use token-policy-ng-v1 [token-info])
+  (use util-policies)
 
   ;-----------------------------------------------------------------------------
   ; Governance
@@ -13,7 +14,7 @@
   ; Policy hooks
   ;-----------------------------------------------------------------------------
   (defun rank:integer ()
-    0)
+    RANK-HIGH-PRIORITY)
 
   (defun enforce-unity:bool (amount:decimal)
     (enforce (= amount 1.0) "Non-fungible: amount can only be 1"))

@@ -11,6 +11,19 @@
     (enforce-keyset ADMIN-KEYSET))
 
   ;-----------------------------------------------------------------------------
+  ; Constants
+  ;-----------------------------------------------------------------------------
+  (defconst RANK-HIGH-PRIORITY:integer 0)
+
+  (defconst RANK-SELLER-FEE:integer 10)
+
+  (defconst RANK-ROYALTY:integer 20)
+
+  (defconst RANK-SALE:integer 30)
+
+  (defconst RANK-LOW-PRIORITY:integer 99)
+
+  ;-----------------------------------------------------------------------------
   ; Read messages from data
   ;-----------------------------------------------------------------------------
 
@@ -89,6 +102,4 @@
     @doc "Enforce that a rate is between 0.0 and 1.0"
     (enforce (between 0.0 1.0 rate) "Rate must be between 0.0 and 1.0")
   )
-
-
 )

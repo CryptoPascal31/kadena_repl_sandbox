@@ -69,14 +69,18 @@
 
 
   (defun policies-list-for-token-id:[module{token-policy-ng-v1}]  (token-id:string)
-  @doc "Return the list of policies associted to a given token-id \
-      \ Global policies  - blacklisted policies"
-    ; We read the global list
-    ;   then the blacklisted list for the given token
-    ;     -> And we filter the global list from the blacklisted tokens
-    (with-read global "" {'policies:=pols-list}
-      (with-read tokens token-id {'blacklist:=blacklist}
-        (filter-from-list pols-list blacklist)))
+    @doc "Return the list of policies associted to a given token-id \
+      \ Global policies MINUS blacklisted policies"
+    ; If the token is not registered (token doesn't implement extra-polices) we don't
+    ;  throw an error but returns an empty list. ; This should simplify the processing in
+    ;  the backends
+    ; If the token is registered, we read the global list and the blacklist.
+    ;  we return the difference between the two lists.
+    (with-default-read tokens token-id {'token-id:"", 'blacklist:[]}
+                                       {'token-id:=tid, 'blacklist:=blacklist}
+      (if (= tid "") []
+          (with-read global "" {'policies:=pols-list}
+            (filter-from-list pols-list blacklist))))
   )
 
   (defun policies-list-for-token:[module{token-policy-ng-v1}] (token:object{token-info})
@@ -104,7 +108,8 @@
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;---------------------------------------------------------------------------
-  (defun rank:integer () 25)
+  (defun rank:integer ()
+    (/ (+ RANK-ROYALTY RANK-SALE) 2))
 
   (defun enforce-init:bool (token:object{token-info})
     ; Since the extra-policy can be added after init, there is no sense of calling

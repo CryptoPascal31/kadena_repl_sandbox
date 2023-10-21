@@ -119,7 +119,8 @@
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
-  (defun rank:integer () 30)
+  (defun rank:integer ()
+    RANK-SALE)
 
   (defun enforce-init:bool (token:object{token-info})
     false)

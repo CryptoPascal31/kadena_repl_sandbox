@@ -3,7 +3,7 @@
   (use kip.poly-fungible-v3 [account-details sender-balance-change receiver-balance-change])
   (use token-policy-ng-v1 [token-info])
   (use free.util-strings [to-string starts-with])
-  (use free.util-time [is-future])
+  (use free.util-time [time-between now from-now])
   (use free.util-fungible [enforce-precision enforce-reserved enforce-valid-account enforce-valid-transfer enforce-valid-amount])
 
   ;-----------------------------------------------------------------------------
@@ -39,6 +39,9 @@
 
   ; Constant used for sales, that represents a no timeout
   (defconst NO-TIMEOUT:time (time "0000-01-01T00:00:00Z"))
+
+  ; Maximum tiemeout in days => 10 years
+  (defconst MAXIMUM-TIMEOUT:decimal (days (* 10.0 365.25)))
 
   ;-----------------------------------------------------------------------------
   ; Events
@@ -278,7 +281,6 @@
   ; Public Marmalade functions => Create Token
   ;-----------------------------------------------------------------------------
   (defcap POLICY-ENFORCE-INIT (token:object{token-info} mod:module{token-policy-ng-v1})
-    ;@managed
     true)
 
   (defun sort-policies:[module{token-policy-ng-v1}] (in:[module{token-policy-ng-v1}])
@@ -289,11 +291,10 @@
     ;         |-> Sort by 'r
     ;             |-> Extract 'p from the object
     (let ((zip-rank (lambda (pol:module{token-policy-ng-v1}) {'r:(pol::rank), 'p:pol})))
-      (compose (compose (distinct)
-                        (map (zip-rank)))
-               (compose (sort ['r, 'p])
-                        (map (at 'p)))
-               in))
+      (map (at 'p)
+           (sort ['r, 'p]
+                 (map (zip-rank)
+                      (distinct in)))))
   )
 
 
@@ -307,7 +308,6 @@
     (let* ((_policies (sort-policies policies))
            (token-info {'id:id, 'uri:uri, 'precision:precision, 'supply:0.0})
            (call-policy (lambda (m:module{token-policy-ng-v1})
-                                ;(install-capability (POLICY-ENFORCE-INIT token-info m))
                                 (with-capability (POLICY-ENFORCE-INIT token-info m)
                                   (m::enforce-init token-info)))))
       ; Call the creation policies
@@ -436,22 +436,16 @@
   ; Public Marmalade functions => Sale
   ;-----------------------------------------------------------------------------
   (defcap POLICY-ENFORCE-OFFER (token:object{token-info} sale-id:string mod:module{token-policy-ng-v1})
-    ;@managed
     true)
 
   (defcap POLICY-ENFORCE-WITHDRAW (token:object{token-info} sale-id:string mod:module{token-policy-ng-v1})
-    ;@managed
     true)
 
   (defcap POLICY-ENFORCE-BUY (token:object{token-info} sale-id:string mod:module{token-policy-ng-v1})
-    ;@managed
     true)
 
   (defcap POLICY-ENFORCE-SETTLE (token:object{token-info} sale-id:string mod:module{token-policy-ng-v1})
-    ;@managed
     true)
-
-
 
   (defpact sale:bool (id:string seller:string amount:decimal timeout:time)
     (step-with-rollback
@@ -460,7 +454,6 @@
       (let* ((policies (get-policies id))
              (token-info (get-token-info id))
              (call-policy (lambda (m:module{token-policy-ng-v1})
-                                  ;(install-capability (POLICY-ENFORCE-OFFER token-info (pact-id) m))
                                   (with-capability (POLICY-ENFORCE-OFFER token-info (pact-id) m)
                                     (m::enforce-sale-offer token-info seller amount timeout)))))
 
@@ -477,7 +470,8 @@
 
         ; Check that the timeout is NO-TIMEOUT or in the future
         ; A policy may do additional checks on this timeout
-        (enforce (or? (is-future) (= NO-TIMEOUT) timeout) "Timeout must be in future")
+        (enforce (or? (time-between (now) (from-now MAXIMUM-TIMEOUT))
+                      (= NO-TIMEOUT) timeout) "Invalid timeout")
 
         ; Call the policies => All the returns values are ORed using fold.
         ; This ensures that at least one policy has handled the sale.
@@ -497,7 +491,6 @@
       (let* ((policies (get-policies id))
              (token-info (get-token-info id))
              (call-policy (lambda (m:module{token-policy-ng-v1})
-                                  ;(install-capability (POLICY-ENFORCE-WITHDRAW token-info (pact-id) m))
                                   (with-capability (POLICY-ENFORCE-WITHDRAW token-info (pact-id) m)
                                     (m::enforce-sale-withdraw token-info)))))
         ; Call the policies
@@ -518,11 +511,9 @@
              (buyer:string (read-string "buyer"))
              (buyer-guard:guard (read-msg "buyer-guard"))
              (call-buy    (lambda (m:module{token-policy-ng-v1})
-                                  ;(install-capability (POLICY-ENFORCE-BUY token-info (pact-id) m))
                                   (with-capability (POLICY-ENFORCE-BUY token-info (pact-id) m)
                                                    (m::enforce-sale-buy token-info buyer))))
              (call-settle (lambda (m:module{token-policy-ng-v1})
-                                  ;(install-capability (POLICY-ENFORCE-SETTLE token-info (pact-id) m))
                                   (with-capability (POLICY-ENFORCE-SETTLE token-info (pact-id) m)
                                                    (m::enforce-sale-settle token-info)))))
 

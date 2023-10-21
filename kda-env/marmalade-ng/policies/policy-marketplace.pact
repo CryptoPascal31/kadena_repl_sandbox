@@ -80,7 +80,8 @@
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
-  (defun rank:integer () 10)
+  (defun rank:integer ()
+    RANK-SELLER-FEE)
 
   (defun enforce-init:bool (token:object{token-info})
     true)

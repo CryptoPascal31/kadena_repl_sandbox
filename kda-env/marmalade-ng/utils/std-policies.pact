@@ -39,7 +39,7 @@
   (defun to-policy:module{token-policy-ng-v1} (name:string)
     @doc "Convert a name to a policy"
     (let ((match:[object{entry}] (filter (where 'name (= name)) POLICIES-LIST)))
-      (enforce (!= 0 (length match)) "Policy not found")
+      (enforce (!= 0 (length match)) (format "Policy not found: {}" [name]))
       (at 'pol (first match)))
   )
 
