@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.7")
+  (defconst VERSION:string "0.8")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -185,12 +185,12 @@
 
   (defun gcd:integer (a:integer b:integer)
     "Returns the greatest common divisor of 2 integers"
-    ; We use the euclidean iterative algorithm (optimized by modulo)
-    ; According to several sources and my own tests, the maximum complexity of the euclidean algorithm is
-    ; log/Phy ( min(a,b)). For safety, at then end, we check (enforce) at that the algorithm has ended (ie b=0)/
+    ; We use the Euclidean iterative algorithm (optimized by modulo)
+    ; According to several sources and my own tests, the maximum complexity of the Euclidean algorithm is
+    ; log/Phy ( min(a,b)). For safety, at the end, we check (enforce) that the algorithm has ended (ie b=0)/
     ; But that enforcement should never fail.
 
-    ; First let's abs a and b and order them
+    ; First let remove the sign of a and b and order them
     ; a* is the big, *b is the small
     (let* ((a (abs a)) (b (abs b))
            (a* (if (< a b) b a))

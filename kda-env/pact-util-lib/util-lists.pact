@@ -15,14 +15,30 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.7")
+  (defconst VERSION:string "0.8")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
 
   (defun enforce-not-empty:bool (x:list)
     "Verify and ENFORCES that a list is not empty"
-    (enforce (> (length x) 0) "List cannot be empty"))
+    (enforce (is-not-empty x) "List cannot be empty"))
+
+  (defun is-empty:bool (x:list)
+    "Return true if the list is empty"
+    (= 0 (length x)))
+
+  (defun is-not-empty:bool (x:list)
+    "Return true if the list is not empty"
+    (< 0 (length x)))
+
+  (defun is-singleton:bool (x:list)
+    "Return true if the list is a singleton"
+    (= 1 (length x)))
+
+  (defun is-pair:bool (x:list)
+    "Return true if the list is a pair"
+    (= 2 (length x)))
 
   (defun enforce-list-bounds:bool (x:list idx:integer)
     "Verify and ENFORCES that idx is in list bounds"
@@ -32,14 +48,24 @@
     "Chain list of lists"
     (fold (+) [] in))
 
-  (defun enumerate-list:[object] (in:list)
+  (defschema list-enum
+    "Object returned by enumerate-list"
+    i:integer
+    v)
+
+  (defun enumerate-list:[object{list-enum}] (in:list)
     "Returns a list of objects {'i:idx, 'v:value} where i is the index, and v the value"
-    ; The enumerate should go from 0 to N-1, but since zip takes the shortest, and for clarity we go from 0 to N
+    ; The enumeration should go from 0 to N-1, but since zip takes the shortest, and for clarity we go from 0 to N
     (let ((indexes (enumerate 0 (length in))))
-      (zip (lambda (idx x) {'i:idx, 'v:x}) indexes in))
+      (zip (lambda (idx:integer x) {'i:idx, 'v:x}) indexes in))
   )
 
-  ;; Getter Funtcions
+  (defun contains*:bool (in:list item)
+    "Starred version of contains for list => arguments inverted"
+    (contains item in)
+  )
+
+  ;; Getter Functions
   (defun first (in:list)
     "Returns the first item of a list"
     (enforce-not-empty in)
@@ -62,11 +88,9 @@
     "Search an item into the list and returns a list of index"
     ; Save gas if item is not in list => use the native contains to return empty
     (if (contains item in)
-        (let ((match-func (lambda (out-list x)
-                                  (if (= (at 'v x) item)
-                                      (append-last out-list (at 'i x))
-                                      out-list))))
-          (fold match-func [] (enumerate-list in)))
+        (let ((indexes (enumerate 0 (length in)))
+              (match (lambda (v i) (if (= item v) i -1))))
+          (remove-item (zip (match) in indexes) -1))
         [])
   )
 
@@ -76,12 +100,12 @@
   )
 
   ;; Creation and extension functions
-  (defun make-list-like (in:list value)
+  (defun make-list-like:list (in:list value)
     "Creates a new list whose size is the same as in, by repeating value"
     (make-list (length in) value)
   )
 
-  (defun extend (in:list new-length:integer value)
+  (defun extend:list (in:list new-length:integer value)
     "Extends a list to new-length by repeating value"
     (let ((missing-items (- new-length (length in))))
       (if (<= missing-items 0)
@@ -89,7 +113,7 @@
           (+ in (make-list missing-items value))))
   )
 
-  (defun extend-like (in:list target:list value)
+  (defun extend-like:list (in:list target:list value)
     "Extends a list to the same length as target, by repeating value"
     (extend in (length target) value)
   )
