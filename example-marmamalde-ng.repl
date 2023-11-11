@@ -1,7 +1,7 @@
 (env-data {"disable-marmalade-v1":true})
 (load "kda-env/init.repl")
 
-; Create two token and mint it
+; Create two token and mint them
 (begin-tx)
 (use marmalade-ng.ledger)
 (use marmalade-ng.std-policies)
