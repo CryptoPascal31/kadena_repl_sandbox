@@ -18,12 +18,12 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.7")
+  (defconst VERSION:string "0.8.1")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
 
-  (use util-lists [replace-item first last append-last replace-last])
+  (use util-lists)
 
   (defconst ASCII-TABLE  {" ":32, "!":33, "\"":34, "#":35, "$":36, "%":37, "&":38, "\'":39,
                           "(":40, ")":41, "*":42, "+":43, ",":44, "-":45, ".":46, "/":47,
@@ -142,22 +142,20 @@
 
   (defun join:string (separator:string in:[string])
     "Join a list of string with a separator"
-    (if (= 0 (length in))
-        ""
-        (if (= 1 (length in))
-            (at 0 in)
-            (+ (first in) (concat (map (+ separator) (drop 1 in))))))
+    (if (is-empty in) ""
+        (if (is-singleton in) ; Needed as a workaround
+            (first in)        ; of https://github.com/kadena-io/pact/issues/1316
+            (+ (first in) (concat (map (+ separator) (remove-first in))))))
   )
 
   (defun split:[string] (separator:string in:string)
-    "Split a string using a separator. Returns a list of substrings. Separator can only be a single char"
     (if (= 0 (length in))
-        [] ;If the string is empty return a zero length list
-        (let ((process-char (lambda (current-list char)
-                                    (if (= char separator)
-                                        (append-last current-list "")
-                                        (replace-last current-list (+ (last current-list) char))))))
-          (fold (process-char) [""] (str-to-list in))))
+      [] ;If the string is empty return a zero length list
+      (let* ((sep-pos (search (str-to-list in) separator))
+             (substart (map (+ 1) (insert-first sep-pos -1)))
+             (sublen  (zip (-) (append-last sep-pos 10000000) substart))
+             (cut (lambda (start len) (take len (drop start in)))))
+        (zip (cut) substart sublen)))
   )
 
   (defun split-chunks:[string] (chunk-size:integer in:string)
@@ -197,15 +195,10 @@
 
   ;; Stripping functions
   (defun --count-to-strip:integer (to-remove:string in:[string])
-    (let* ((do-count (lambda (state x)
-                             (bind state {"s":=s, "cnt":=cnt}
-                              (if (not s)
-                                  state
-                                  (if (= x to-remove)
-                                      (+ {'cnt: (+ cnt 1)} state)
-                                      (+ {'s:false} state)))))))
-
-      (at 'cnt (fold (do-count) {'s:true, 'cnt:0} in)))
+    (fold (lambda (cnt x) (if (>= cnt 0)      cnt
+                          (if (= x to-remove) (- cnt 1)
+                                              (- (+ cnt 1) ))))
+          -1 in)
   )
 
   (defun left-strip:string (to-remove:string in:string)
@@ -235,11 +228,10 @@
     (let* ((is-negative (= "-" (take 1 in)))
            (in (if is-negative (drop 1 in) in))
            (parts (split "." in)))
-      (enforce (or? (= 1) (= 2) (length parts)) "Invalid format")
-      (let* ((int-part (at 0 parts))
-             (has-decimal (= 2 (length parts)))
-             (dec-part (if has-decimal (at 1 parts) "0"))
-             (precision (if has-decimal (length dec-part) 0))
+      (enforce (or? (is-singleton) (is-pair) parts) "Invalid format")
+      (let* ((int-part (first parts))
+             (dec-part (if (is-pair parts) (last parts) "0"))
+             (precision (if (is-pair parts) (length dec-part) 0))
              (dec-multiplier (^ 0.1 (dec precision)))
              (str-to-dint (lambda (x) (dec (str-to-int 10 x))))
              (val (+ (str-to-dint int-part) (* dec-multiplier (str-to-dint dec-part)))))

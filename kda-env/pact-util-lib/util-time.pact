@@ -14,12 +14,13 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.7")
+  (defconst VERSION:string "0.8")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
 
   (use util-chain-data [block-time block-height])
+  (use util-math [between])
 
   (defconst EPOCH (time "1970-01-01T00:00:00Z"))
 
@@ -40,6 +41,21 @@
     "Returns the current time"
     (block-time))
 
+  (defun tomorrow:time ()
+    "Returns current time + 24 hours"
+    (from-now (days 1))
+  )
+
+  (defun yesterday:time ()
+    "Returns current time - 24 hours"
+    (from-now (days -1))
+  )
+
+  (defun from-now:time (delta:decimal)
+    "Returns the delta time taking now as a reference"
+    (add-time (now) delta)
+  )
+
   (defun today:string ()
     "Returns the current day"
     (format-time "%F" (now))
@@ -50,8 +66,12 @@
     (diff-time in (epoch))
   )
 
+  (defconst TIMESTAMP-LIMIT:decimal 3155695200000.0)
+
   (defun from-timestamp:time (timestamp:decimal)
     "Computes a time from an Unix timestamp"
+    ; Since add-time is not safe for big numbers we enforce a min/max of 100kyears
+    (enforce (between (- TIMESTAMP-LIMIT) TIMESTAMP-LIMIT timestamp) "Timestamp out of bounds")
     (add-time (epoch) timestamp)
   )
 
