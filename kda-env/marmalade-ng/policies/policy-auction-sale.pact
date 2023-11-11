@@ -15,8 +15,23 @@
   ;-----------------------------------------------------------------------------
   ; Capabilities and events
   ;-----------------------------------------------------------------------------
+  (defcap AUCTION-SALE-OFFER (sale-id:string token-id:string start-price:decimal)
+    @doc "Event sent when an auction is started"
+    @event
+    true)
+
   (defcap PLACE-BID (sale-id:string token-id:string buyer:string price:decimal)
     @doc "Event emitted after an external bid"
+    @event
+    true)
+
+  (defcap AUCTION-SALE-BOUGHT (sale-id:string token-id:string buy-price:decimal)
+    @doc "Event sent when an auction has ended"
+    @event
+    true)
+
+  (defcap AUCTION-SALE-WITHDRAWN (sale-id:string token-id:string)
+    @doc "Event sent when an auction has been withdrawn because there is no bid"
     @event
     true)
 
@@ -117,7 +132,8 @@
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
-  (defun rank:integer () 30)
+  (defun rank:integer ()
+    RANK-SALE)
 
   (defun enforce-init:bool (token:object{token-info})
     true)
@@ -148,21 +164,24 @@
           ; Check that the recipient account is valid and already exists in the currency
           (check-fungible-account currency recipient)
 
-          ; Insert the quote into the DB
-          (insert auctions (pact-id) {'sale-id: (pact-id),
-                                      'token-id: (at 'id token),
-                                      'seller: seller,
-                                      'amount: amount,
-                                      'escrow-account: (auction-escrow (pact-id)),
-                                      'currency: currency,
-                                      'start-price: start-price,
-                                      'current-price: 0.0,
-                                      'increment-ratio: increment-ratio,
-                                      'current-buyer:"",
-                                      'recipient: recipient,
-                                      'timeout: timeout,
-                                      'enabled: true})
-            true)
+
+          (bind token {'id:=token-id}
+            ; Insert the quote into the DB
+            (insert auctions (pact-id) {'sale-id: (pact-id),
+                                        'token-id: token-id,
+                                        'seller: seller,
+                                        'amount: amount,
+                                        'escrow-account: (auction-escrow (pact-id)),
+                                        'currency: currency,
+                                        'start-price: start-price,
+                                        'current-price: 0.0,
+                                        'increment-ratio: increment-ratio,
+                                        'current-buyer:"",
+                                        'recipient: recipient,
+                                        'timeout: timeout,
+                                        'enabled: true})
+            ; Emit event always returns true
+            (emit-event (AUCTION-SALE-OFFER (pact-id) token-id start-price))))
         false))
   )
 
@@ -176,7 +195,7 @@
       (enforce (= current-buyer "") "Bid active"))
     ; Disable the sale
     (update auctions (pact-id) {'enabled: false})
-    true
+    (emit-event (AUCTION-SALE-WITHDRAWN (pact-id) (at 'id token)))
   )
 
   (defun enforce-sale-withdraw:bool (token:object{token-info})
@@ -190,7 +209,7 @@
     (enforce-sale-ended)
     (with-read auctions (pact-id) {'token-id:=token-id,
                                    'currency:=currency:module{fungible-v2},
-                                   'current-price:=current-price,
+                                   'current-price:=buy-price,
                                    'current-buyer:=current-buyer}
 
       ; Check that the buyer is different from EMPTY. It means that someone has placed a bid
@@ -202,9 +221,10 @@
 
       ; Transfer the funds from the "Auction escrow account" -> "Sale escrow account"
       (with-capability (AUCTION-ESCROW-ACCOUNT (pact-id))
-        (install-capability (currency::TRANSFER (auction-escrow (pact-id)) (ledger.escrow) current-price))
-        (currency::transfer-create (auction-escrow (pact-id)) (ledger.escrow) (ledger.escrow-guard) current-price))
-      true)
+        (install-capability (currency::TRANSFER (auction-escrow (pact-id)) (ledger.escrow) buy-price))
+        (currency::transfer-create (auction-escrow (pact-id)) (ledger.escrow) (ledger.escrow-guard) buy-price))
+      ; Emit the event
+      (emit-event (AUCTION-SALE-BOUGHT (pact-id) token-id buy-price)))
   )
 
   (defun enforce-sale-buy:bool (token:object{token-info} buyer:string)

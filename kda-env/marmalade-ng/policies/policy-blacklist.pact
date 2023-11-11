@@ -66,7 +66,7 @@
   ; Policy hooks
   ;-----------------------------------------------------------------------------
   (defun rank:integer ()
-    0)
+    RANK-HIGH-PRIORITY)
 
   (defun enforce-init:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-INIT token policy-blacklist))

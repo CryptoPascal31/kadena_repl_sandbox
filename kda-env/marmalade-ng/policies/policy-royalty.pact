@@ -51,10 +51,10 @@
   ; Input data
   ;-----------------------------------------------------------------------------
   (defschema royalty-init-msg-sch
-    creator_acct:string
-    creator_guard:guard
-    rate:decimal
-    currencies:[module{fungible-v2}]
+    creator_acct:string ; Creator account: recipient of the royalty
+    creator_guard:guard ; Creator account: recipient of the royalty
+    rate:decimal ; Royalty rate
+    currencies:[module{fungible-v2}] ; List of currencies allowed for royalty payment
   )
 
   (defun read-royalty-init-msg:object{royalty-init-msg-sch} (token:object{token-info})
@@ -69,7 +69,8 @@
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
-  (defun rank:integer () 20)
+  (defun rank:integer ()
+    RANK-ROYALTY)
 
   (defun enforce-init:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-INIT token policy-royalty))
@@ -107,7 +108,7 @@
         ;   until this one will be fixed, we have to compare by stringified versions
         (enforce (contains (to-string currency) (map (to-string) allowed-currencies))
                  "Currency is not allowed"))
-                 
+
       ;Store the currency for this sale-id => This will be needed during (enforce-settle)
       (insert royalty-sales (pact-id) {'currency: currency}))
     false ; We always return false because the royalty policy does not handle a sale

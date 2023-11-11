@@ -4,6 +4,7 @@
 (define-namespace 'marmalade-ng GUARD_SUCCESS GUARD_SUCCESS)
 
 (env-data {'admin_keyset:"marmalade-ng.admin",
+           'extra_policies_admin_keyset:"marmalade-ng.extra-pol-admin",
            'ks:["adm"]})
 
 (namespace 'kip)
@@ -42,6 +43,11 @@
 
 (load "marmalade-ng/policies/policy-dutch-auction-sale.pact")
 (create-table quotes)
+
+(load "marmalade-ng/policies/policy-extra-policies.pact")
+(create-table global)
+(create-table tokens)
+(create-table sales)
 
 (load "marmalade-ng/policies/policy-fixed-issuance.pact")
 (create-table supplies)

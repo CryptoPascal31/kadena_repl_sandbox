@@ -3,8 +3,8 @@
   (use token-policy-ng-v1 [token-info])
   (use util-policies)
   (use ledger [NO-TIMEOUT account-guard])
+  (use free.util-math [max])
   (use free.util-time [is-past is-future now])
-  (use free.util-math)
 
   ;-----------------------------------------------------------------------------
   ; Governance
@@ -18,6 +18,21 @@
   ;-----------------------------------------------------------------------------
   (defcap FORCE-WITHDRAW (sale-id:string)
     @doc "Capability to scope a signature when withdrawing an infinite timeout sale"
+    true)
+
+  (defcap DUTCH-AUCTION-SALE-OFFER (sale-id:string token-id:string start-price:decimal)
+    @doc "Event sent when a dutch auction sale is started"
+    @event
+    true)
+
+  (defcap DUTCH-AUCTION-SALE-BOUGHT (sale-id:string token-id:string buy-price:decimal)
+    @doc "Event sent when a dutch auction sale is bought"
+    @event
+    true)
+
+  (defcap DUTCH-AUCTION-SALE-WITHDRAWN (sale-id:string token-id:string)
+    @doc "Event sent when a dutch auction sale is withdrawn"
+    @event
     true)
 
   ;-----------------------------------------------------------------------------
@@ -104,7 +119,8 @@
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
-  (defun rank:integer () 30)
+  (defun rank:integer ()
+    RANK-SALE)
 
   (defun enforce-init:bool (token:object{token-info})
     false)
@@ -137,22 +153,24 @@
             ; Check that the recipient account already exists in the currency
             (check-fungible-account currency recipient)
 
-            ; Insert the quote into the DB
-            (insert quotes (pact-id) {'sale-id: (pact-id),
-                                      'token-id: (at 'id token),
-                                      'seller: seller,
-                                      'seller-guard: (account-guard (at 'id token) seller),
-                                      'amount:amount,
-                                      'escrow-account: (ledger.escrow),
-                                      'currency: currency,
-                                      'start-price:start-price,
-                                      'end-price:end-price,
-                                      'start-time:(now),
-                                      'end-time:end-time,
-                                      'recipient: recipient,
-                                      'timeout: timeout,
-                                      'enabled: true})
-              true)
+            (bind token {'id:=token-id}
+              ; Insert the quote into the DB
+              (insert quotes (pact-id) {'sale-id: (pact-id),
+                                        'token-id: token-id,
+                                        'seller: seller,
+                                        'seller-guard: (account-guard token-id seller),
+                                        'amount:amount,
+                                        'escrow-account: (ledger.escrow),
+                                        'currency: currency,
+                                        'start-price:start-price,
+                                        'end-price:end-price,
+                                        'start-time:(now),
+                                        'end-time:end-time,
+                                        'recipient: recipient,
+                                        'timeout: timeout,
+                                        'enabled: true})
+              ; Emit event always returns true
+              (emit-event (DUTCH-AUCTION-SALE-OFFER (pact-id) token-id start-price))))
             false))
   )
 
@@ -162,7 +180,8 @@
     (enforce-seller-guard)
     ; Disable the sale
     (update quotes (pact-id) {'enabled: false})
-    true
+    ; Emit the corresponding event
+    (emit-event (DUTCH-AUCTION-SALE-WITHDRAWN (pact-id) (at 'id token)))
   )
 
   (defun enforce-sale-withdraw:bool (token:object{token-info})
@@ -173,10 +192,12 @@
   (defun --enforce-sale-buy:bool (token:object{token-info} buyer:string)
     (require-capability (ledger.POLICY-ENFORCE-BUY token (pact-id) policy-dutch-auction-sale))
     (enforce-sale-not-ended)
-    ; First step to handle the buying part => Transfer the amount to the escrow account
-    (with-read quotes (pact-id) {'currency:=currency:module{fungible-v2}}
-      (currency::transfer-create buyer (ledger.escrow) (ledger.escrow-guard) (compute-price (pact-id))))
-    true
+    (let ((buy-price (compute-price (pact-id))))
+      ; First step to handle the buying part => Transfer the amount to the escrow account
+      (with-read quotes (pact-id) {'currency:=currency:module{fungible-v2}}
+        (currency::transfer-create buyer (ledger.escrow) (ledger.escrow-guard) buy-price))
+        ; Emit the corresponding event
+      (emit-event (DUTCH-AUCTION-SALE-BOUGHT (pact-id) (at 'id token) buy-price)))
   )
 
   (defun enforce-sale-buy:bool (token:object{token-info} buyer:string)

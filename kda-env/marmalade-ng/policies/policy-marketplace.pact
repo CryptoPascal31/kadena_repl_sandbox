@@ -2,8 +2,7 @@
   (implements token-policy-ng-v1)
   (use token-policy-ng-v1 [token-info])
   (use util-policies)
-  (use free.util-math)
-
+  (use free.util-math [clamp])
 
   ;-----------------------------------------------------------------------------
   ; Governance
@@ -81,7 +80,8 @@
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
-  (defun rank:integer () 10)
+  (defun rank:integer ()
+    RANK-SELLER-FEE)
 
   (defun enforce-init:bool (token:object{token-info})
     true)

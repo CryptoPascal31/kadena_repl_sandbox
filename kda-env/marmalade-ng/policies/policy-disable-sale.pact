@@ -1,6 +1,7 @@
 (module policy-disable-sale GOVERNANCE
   (implements token-policy-ng-v1)
   (use token-policy-ng-v1 [token-info])
+  (use util-policies)
 
   ;-----------------------------------------------------------------------------
   ; Governance
@@ -13,19 +14,16 @@
   ; Policy hooks
   ;-----------------------------------------------------------------------------
   (defun rank:integer ()
-    0)
+    RANK-HIGH-PRIORITY)
 
   (defun enforce-init:bool (token:object{token-info})
     true)
 
-
   (defun enforce-mint:bool (token:object{token-info} account:string amount:decimal)
     true)
 
-
   (defun enforce-burn:bool (token:object{token-info} account:string amount:decimal)
     true)
-
 
   (defun enforce-transfer:bool (token:object{token-info} sender:string receiver:string amount:decimal)
     true)

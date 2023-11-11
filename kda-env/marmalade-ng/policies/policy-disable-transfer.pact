@@ -1,6 +1,7 @@
 (module policy-disable-transfer GOVERNANCE
   (implements token-policy-ng-v1)
   (use token-policy-ng-v1 [token-info])
+  (use util-policies)
 
   ;-----------------------------------------------------------------------------
   ; Governance
@@ -9,12 +10,11 @@
   (defcap GOVERNANCE ()
     (enforce-keyset ADMIN-KEYSET))
 
-
   ;-----------------------------------------------------------------------------
   ; Policy hooks
   ;-----------------------------------------------------------------------------
   (defun rank:integer ()
-    0)
+    RANK-HIGH-PRIORITY)
 
   (defun enforce-init:bool (token:object{token-info})
     true)
