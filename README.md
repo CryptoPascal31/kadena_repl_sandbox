@@ -36,7 +36,7 @@ Load successful
 ## Description
 
 ### Pact
-Based on Pact 4.7.0, and currently on-chains contracts (06/05/2023)
+Based on Pact 4.9.0, and currently on-chains contracts (06/05/2023)
 
 ### Bootstrap modules
 
@@ -91,9 +91,9 @@ Contracts:
 
 
 ### Pact Util library
-The version 0.7 of unofficial Pact Util library:
+The version 0.8.1 of unofficial Pact Util library:
 - https://github.com/CryptoPascal31/pact-util-lib
-- https://pact-util-lib.readthedocs.io/en/beta_0.7/
+- https://pact-util-lib.readthedocs.io/en/beta_0.8.1/
 
 ### Disabling features (optional)
 If you don't need to load some features, you can disable them.
