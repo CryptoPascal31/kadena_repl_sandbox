@@ -42,18 +42,25 @@
 
   (defun enforce-init:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-INIT token policy-fixed-issuance))
-    (let ((msg (read-fixed-supply-msg token)))
-      (bind msg {'max_supply:=max-supply,
-                 'min_mint_amount:=min-mint-amount,
-                 'precision:=precision}
+    (bind (read-fixed-supply-msg token) {'max_supply:=max-supply,
+                                         'min_mint_amount:=min-mint-amount,
+                                         'precision:=precision}
+      ; Check that min-mint-amount is compliant with precision and positive
+      (enforce (and? (<= 0.0) (enforce-precision precision) min-mint-amount) "Invalid min-mint-amount")
 
-        (enforce (and? (<= 0.0) (enforce-precision precision) min-mint-amount) "Invalid min-mint-amount")
-        (enforce (and? (< 0.0) (enforce-precision precision) max-supply) "Invalid max-supply")
-        (enforce (<= min-mint-amount max-supply) "Invalid min-mint-amount / max-supply")
-        (enforce (= precision (at 'precision token)) "Invalid Precision")
-        (insert supplies (at 'id token) {'min-mint-amount:min-mint-amount,
-                                         'max-supply:max-supply})))
-    true
+      ; Check that max-supply is compliant with precision and positive
+      (enforce (and? (< 0.0) (enforce-precision precision) max-supply) "Invalid max-supply")
+
+      ; Check thet min-min-amount is less or equal than max-supply, otherwise it doesn't make sense
+      (enforce (<= min-mint-amount max-supply) "Invalid min-mint-amount / max-supply")
+
+      ; Check that the declared precision through the create api is consistent with the message data
+      (enforce (= precision (at 'precision token)) "Invalid Precision")
+
+      ; Store the specification for later usage during mint
+      (insert supplies (at 'id token) {'min-mint-amount:min-mint-amount,
+                                       'max-supply:max-supply})
+      true)
   )
 
   (defun enforce-mint:bool (token:object{token-info} account:string amount:decimal)

@@ -30,7 +30,8 @@
                                            {'name:"INSTANT-MINT",      'pol:policy-instant-mint},
                                            {'name:"MARKETPLACE",       'pol:policy-marketplace},
                                            {'name:"NON-FUNGIBLE",      'pol:policy-non-fungible},
-                                           {'name:"ROYALTY",           'pol:policy-royalty}])
+                                           {'name:"ROYALTY",           'pol:policy-royalty},
+                                           {'name:"TRUSTED-CUSTODY",   'pol:policy-trusted-custody}])
 
 
   (defun default-name:string (pol:module{token-policy-ng-v1})

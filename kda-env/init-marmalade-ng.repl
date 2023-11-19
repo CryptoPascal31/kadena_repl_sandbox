@@ -70,6 +70,10 @@
 (create-table royalty-sales)
 (create-table royalty-tokens)
 
+(load "marmalade-ng/policies/policy-trusted-custody.pact")
+(create-table tokens-custody)
+(create-table accounts-custody)
+
 (load "marmalade-ng/utils/std-policies.pact")
 
 (commit-tx)
