@@ -1,6 +1,6 @@
 (module ledger GOVERNANCE
-  (implements kip.poly-fungible-v3)
-  (use kip.poly-fungible-v3 [account-details sender-balance-change receiver-balance-change])
+  (implements kip.ng-poly-fungible-v1)
+  (use kip.ng-poly-fungible-v1 [account-details sender-balance-change receiver-balance-change])
   (use token-policy-ng-v1 [token-info])
   (use free.util-strings [to-string starts-with])
   (use free.util-time [time-between now from-now])
@@ -63,11 +63,6 @@
     @event
     true)
 
-  (defcap ACCOUNT_GUARD:bool (id:string account:string guard:guard)
-    @doc "Deprecated... Not emitted anymore"
-    @event
-    true)
-
   ;-----------------------------------------------------------------------------
   ; Ledger Caps
   ;-----------------------------------------------------------------------------
@@ -105,12 +100,6 @@
     @managed amount TRANSFER-mgr
     (compose-capability (DEBIT id sender))
     (compose-capability (CREDIT id receiver))
-  )
-
-  (defcap XTRANSFER:bool (id:string sender:string receiver:string target-chain:string amount:decimal)
-    @doc "Not used, since X-chain transfers managed my the ledger are not supported"
-    @managed amount TRANSFER-mgr
-    (enforce false "cross chain not supported")
   )
 
   (defcap SALE:bool (id:string seller:string amount:decimal timeout:time sale-id:string)
@@ -354,11 +343,6 @@
         ; Emit the RECONCILE event
         (emit-event (RECONCILE id amount s-bal-change r-bal-change))))
   )
-
-  (defpact transfer-crosschain:bool (id:string sender:string receiver:string receiver-guard:guard
-                                     target-chain:string amount:decimal)
-    @doc "Not used, since X-chain transfers managed my the ledger are not supported"
-    (step (enforce false "cross chain not supported")))
 
   ;-----------------------------------------------------------------------------
   ; Public Marmalade functions => Mint Token

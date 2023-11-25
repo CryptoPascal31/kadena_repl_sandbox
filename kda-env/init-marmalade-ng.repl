@@ -8,7 +8,7 @@
            'ks:["adm"]})
 
 (namespace 'kip)
-(load "marmalade-ng/kip/poly-fungible-v3.pact")
+(load "marmalade-ng/kip/ng-poly-fungible-v1.pact")
 
 (namespace 'marmalade-ng)
 (env-sigs [{'key:"adm", 'caps:[]}])
