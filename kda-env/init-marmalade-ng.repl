@@ -4,6 +4,7 @@
 
 (env-data {'admin_keyset:"marmalade-ng.admin",
            'extra_policies_admin_keyset:"marmalade-ng.extra-pol-admin",
+           'lock-namespace:false,
            'ks:["adm"]})
 
 (namespace 'kip)
@@ -13,6 +14,7 @@
 (env-sigs [{'key:"adm", 'caps:[]}])
 (define-keyset "marmalade-ng.admin" (read-keyset 'ks))
 (load "marmalade-ng/policies/token-policy-ng-v1.pact")
+(load "marmalade-ng/governance.pact")
 (load "marmalade-ng/utils/util-policies.pact")
 (load "marmalade-ng/ledger.pact")
 

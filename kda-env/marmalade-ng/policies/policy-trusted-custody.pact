@@ -10,9 +10,8 @@
   ;-----------------------------------------------------------------------------
   ; Governance
   ;-----------------------------------------------------------------------------
-  (defconst ADMIN-KEYSET:string (read-string "admin_keyset"))
   (defcap GOVERNANCE ()
-    (enforce-keyset ADMIN-KEYSET))
+    (governance.enforce-governance))
 
   ;-----------------------------------------------------------------------------
   ; Schemas and Tables

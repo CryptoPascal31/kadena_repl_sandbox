@@ -6,9 +6,8 @@
   ;-----------------------------------------------------------------------------
   ; Governance
   ;-----------------------------------------------------------------------------
-  (defconst ADMIN-KEYSET:string (read-string "admin_keyset"))
   (defcap GOVERNANCE ()
-    (enforce-keyset ADMIN-KEYSET))
+    (governance.enforce-governance))
 
   ;-----------------------------------------------------------------------------
   ; Constants
@@ -40,10 +39,10 @@
   ;   - use a global message for all tokens (Syntax 1)
   ;   - use a per-token message (Syntax 2)
   (defun global-key:string (domain:string)
-    (concat ["marmalade" "_" domain]))
+    (format "marmalade_{}" [domain]))
 
   (defun token-key:string (domain:string token:object{token-info})
-    (concat [(global-key domain) "_" (at 'id token)]))
+    (format "{}_{}" [(global-key domain) (at 'id token)]))
 
   (defun get-msg-data:object (domain:string token:object{token-info} default:object)
     @doc "Read an optional message from data, trying to read \
@@ -78,6 +77,18 @@
 
   (defun enforce-read-sale-msg:object{sale-msg-sch} (token:object{token-info})
     (enforce-get-msg-data "sale" token))
+
+  ;-----------------------------------------------------------------------------
+  ; Shared fee messages
+  ;-----------------------------------------------------------------------------
+  (defschema shared-fee-msg
+    recipient:string ; Recipient account for the shared-fee
+  )
+
+  (defconst DEFAULT-SHARED-FEE:object{shared-fee-msg} {'recipient:""})
+
+  (defun read-shared-fee-msg:object{shared-fee-msg} (token:object{token-info})
+    (get-msg-data "shared_fee" token DEFAULT-SHARED-FEE))
 
   ;-----------------------------------------------------------------------------
   ; Sales common utils

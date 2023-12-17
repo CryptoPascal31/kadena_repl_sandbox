@@ -3,14 +3,13 @@
   (use token-policy-ng-v1 [token-info])
   (use util-policies)
   (use ledger [NO-TIMEOUT create-account account-exist account-guard])
-  (use free.util-time [now is-past is-future])
+  (use free.util-time [is-past is-future from-now])
 
   ;-----------------------------------------------------------------------------
   ; Governance
   ;-----------------------------------------------------------------------------
-  (defconst ADMIN-KEYSET:string (read-string "admin_keyset"))
   (defcap GOVERNANCE ()
-    (enforce-keyset ADMIN-KEYSET))
+    (governance.enforce-governance))
 
   ;-----------------------------------------------------------------------------
   ; Capabilities and events
@@ -57,6 +56,7 @@
     increment-ratio:decimal
     current-buyer:string
     recipient:string
+    shared-fee:object{shared-fee-msg}
     timeout:time
     enabled:bool
   )
@@ -178,6 +178,7 @@
                                         'increment-ratio: increment-ratio,
                                         'current-buyer:"",
                                         'recipient: recipient,
+                                        'shared-fee: DEFAULT-SHARED-FEE,
                                         'timeout: timeout,
                                         'enabled: true})
             ; Emit event always returns true
@@ -209,6 +210,7 @@
     (enforce-sale-ended)
     (with-read auctions (pact-id) {'token-id:=token-id,
                                    'currency:=currency:module{fungible-v2},
+                                   'shared-fee:=shared-fee,
                                    'current-price:=buy-price,
                                    'current-buyer:=current-buyer}
 
@@ -218,6 +220,9 @@
       ; Check that the buyer that placed the bid is the same as the one that is currently
       ;    claiming the tokens
       (enforce (= buyer current-buyer) "Buyer does not match")
+
+      ; Check that the shared fee object matches
+      (enforce (= shared-fee (read-shared-fee-msg token)) "Shared fee doesn't match with the bid")
 
       ; Transfer the funds from the "Auction escrow account" -> "Sale escrow account"
       (with-capability (AUCTION-ESCROW-ACCOUNT (pact-id))
@@ -256,6 +261,31 @@
   ;-----------------------------------------------------------------------------
   ; Bid function
   ;-----------------------------------------------------------------------------
+  (defun compute-new-timeout:time (current-timeout:time)
+    @doc "Compute the new timeout"
+    ; extension-timeout is the time where a bid must trigger a time extension
+    ; if the time extension is triggered, we calculate the new timeout by adding
+    ;   EXTENSION-TIME to the current time
+    (let ((extension-timeout (add-time current-timeout (- EXTENSION-LIMIT))))
+      (if (is-past extension-timeout)
+          (from-now EXTENSION-TIME)
+          current-timeout))
+  )
+
+  (defun read-valid-shared-fee-msg:object{shared-fee-msg} (token-id:string currency:module{fungible-v2})
+    @doc "Read the object shared-fee and verify that the target account already exist"
+    ; 1 - Fake a token-info object : no need to fetch a true one from the ledger, since we are only
+    ;     interested by the 'id
+    ; 2 - Read the shared-fee message object (if present)
+    ; 3 - Check that the recipient account exists in the currency => No surprise for settling the sale
+    (let* ((token-info-obj {'id:token-id, 'supply:0.0, 'precision:0, 'uri:""})
+           (msg (read-shared-fee-msg token-info-obj)))
+      (if (!= msg DEFAULT-SHARED-FEE)
+          (check-fungible-account currency (at 'recipient msg))
+          true)
+      msg)
+  )
+
   (defun place-bid:string (sale-id:string buyer:string buyer-guard:guard new-price:decimal)
     @doc "Place a bid to the sale. We assume that the fungible account and ledger account \
         \ have the same name. Hence 'buyer' will be used for both purposes:               \
@@ -298,23 +328,17 @@
             (currency::transfer (auction-escrow sale-id) current-buyer current-price))
           "")
 
-    ; Compute the new timeout
-    ; extension-timeout is the time where a bid must trigger a time extension
-    ; if the time extension is triggered, we calculate the new timeout by adding
-    ;   EXTENSION-TIME to the current time
-    (let* ((extension-timeout (add-time timeout (- EXTENSION-LIMIT)))
-           (new-timeout (if (is-past extension-timeout)
-                            (add-time (now) EXTENSION-TIME)
-                            timeout)))
-      ; Update the database with the new buyer and new price,
+      ; Update the database with the new buyer and new price, shared-fee message
       ;  and extended timeout if necessary
-      (update auctions sale-id {'current-price:new-price, 'current-buyer:buyer,
-                                'timeout: new-timeout}))
+      (update auctions sale-id {'current-price:new-price,
+                                'current-buyer:buyer,
+                                'shared-fee: (read-valid-shared-fee-msg token-id currency),
+                                'timeout: (compute-new-timeout timeout)})
 
-    ; Emit the event
-    (emit-event (PLACE-BID sale-id token-id buyer new-price))
-    ; Return a nice looking string
-    (+ "Bid placed for sale: " sale-id))
+      ; Emit the event
+      (emit-event (PLACE-BID sale-id token-id buyer new-price))
+      ; Return a nice looking string
+      (+ "Bid placed for sale: " sale-id))
   )
 
   ;-----------------------------------------------------------------------------

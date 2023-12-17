@@ -7,9 +7,8 @@
   ;-----------------------------------------------------------------------------
   ; Governance
   ;-----------------------------------------------------------------------------
-  (defconst ADMIN-KEYSET:string (read-string "admin_keyset"))
   (defcap GOVERNANCE ()
-    (enforce-keyset ADMIN-KEYSET))
+    (governance.enforce-governance))
 
   ;-----------------------------------------------------------------------------
   ; Schemas and Tables
@@ -42,6 +41,7 @@
     min-fee:decimal ; Minimum absolute fee
     fee-rate:decimal ; Fee rate
     max-fee:decimal ; Maximum absolute fee
+    shared-rate:decimal; Share fee with the buying marketplace
   )
 
   (defconst DEFAULT-MARKETPLACE-FEE:object{marketplace-fee-sch} {'marketplace-name:"",
@@ -49,7 +49,8 @@
                                                                  'currency:coin,
                                                                  'min-fee:0.0,
                                                                  'fee-rate:0.0,
-                                                                 'max-fee:0.0})
+                                                                 'max-fee:0.0,
+                                                                 'shared-rate:0.0})
 
   (defun read-marketplace-msg:object{marketplace-fee-sch} (token:object{token-info})
     (get-msg-data "marketplace" token DEFAULT-MARKETPLACE-FEE))
@@ -65,6 +66,7 @@
                  'currency:=currency:module{fungible-v2},
                  'min-fee:=min-fee,
                  'fee-rate:=fee-rate,
+                 'shared-rate:=shared-rate,
                  'max-fee:=max-fee}
       ; Are min-fee and max-fee are positive and max-fee > min-fee ?
       (enforce (and (and (<= 0.0 min-fee) (<= 0.0 max-fee))
@@ -72,6 +74,9 @@
 
       ; Is fee-rate is between 0.0 and 1.0 ?
       (enforce-valid-rate fee-rate)
+
+      ; Is share rate between 0.0 and 1.0 ?
+      (enforce-valid-rate shared-rate)
 
       ; Is the payment account OK ?
       (check-fungible-account currency account))
@@ -132,6 +137,18 @@
   (defun enforce-sale-buy:bool (token:object{token-info} buyer:string)
     true)
 
+  (defun pay-from-escrow:bool (token:object{token-info} currency:module{fungible-v2}
+                               market-hash:string account:string amount:decimal)
+    (require-capability (ledger.POLICY-ENFORCE-SETTLE token (pact-id) policy-marketplace))
+    (if (> amount 0.0)
+        (let* ((escrow (ledger.escrow))
+               (escrow-balance (currency::get-balance escrow)))
+          (install-capability (currency::TRANSFER escrow account escrow-balance))
+          (currency::transfer escrow account amount)
+          (emit-event (MARKETPLACE-PAID (at 'id token) account market-hash amount)))
+        false)
+  )
+
   (defun enforce-sale-settle:bool (token:object{token-info})
     (require-capability (ledger.POLICY-ENFORCE-SETTLE token (pact-id) policy-marketplace))
     (with-default-read marketplace-sales (pact-id) {'marketplace-fee:DEFAULT-MARKETPLACE-FEE,
@@ -139,27 +156,31 @@
                                                    {'marketplace-fee:=market-fee,
                                                     'marketplace-hash:=market-hash}
       (if (!= market-hash "DEFAULT-HASH")
-          (bind market-fee {'marketplace-account:=account,
+          (bind market-fee {'marketplace-account:=initial-recipient,
                             'currency:=currency:module{fungible-v2},
                             'min-fee:=min-fee,
                             'fee-rate:=fee-rate,
+                            'shared-rate:=shared-rate,
                             'max-fee:=max-fee}
+            (bind (read-shared-fee-msg token) {'recipient:=shared-recipient}
 
-            (let* ((escrow (ledger.escrow))
-                   (escrow-balance (currency::get-balance escrow))
-                   (amount (clamp min-fee max-fee  (* fee-rate escrow-balance)))
-                   (amount (floor amount (currency::precision))))
+              (let* ((escrow-balance (currency::get-balance (ledger.escrow)))
+                     (total-amount (clamp min-fee max-fee  (* fee-rate escrow-balance)))
+                     (shared-amount (if (!= shared-recipient "")
+                                        (floor (* total-amount shared-rate) (currency::precision))
+                                        0.0))
+                     (amount (floor (- total-amount shared-amount) (currency::precision))))
 
-              (if (> amount 0.0)
-                  (let ((_ 0))
-                    (install-capability (currency::TRANSFER escrow account escrow-balance))
-                    (currency::transfer escrow account amount)
-                    (emit-event (MARKETPLACE-PAID (at 'id token) account market-hash amount)))
-                  true))
-            (update marketplace-sales (pact-id) {'enabled: false})
-            true)
+                ; Pay the shared fee
+                (pay-from-escrow token currency market-hash shared-recipient shared-amount)
+
+                ; Pay the initial fee
+                (pay-from-escrow token currency market-hash initial-recipient amount)
+
+                (update marketplace-sales (pact-id) {'enabled: false})
+                true)))
           true))
-    )
+  )
 
   ;-----------------------------------------------------------------------------
   ; View functions
