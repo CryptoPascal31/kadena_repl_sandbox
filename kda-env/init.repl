@@ -1,4 +1,4 @@
-(enforce-pact-version "4.10")
+(enforce-pact-version "5.0")
 
 ;Init basic guard contract (needed to init namespaces)
 (begin-tx)
@@ -12,16 +12,10 @@
 (load "init-kadena.repl")
 
 ; Util lib
-(if (not (try false (read-msg "disable-util-lib")))
-    (load "init-pact-util-lib.repl")
-    "")
+(load "init-pact-util-lib.repl")
 
 ; Marmalade
-(if (not (try false (read-msg "disable-marmalade")))
-    (load "init-marmalade.repl")
-    "")
+(load "init-marmalade.repl")
 
 ; Init test accounts
-(if (not (try false (read-msg "disable-test-accounts")))
-    (load "init-test-accounts.repl")
-    "")
+(load "init-test-accounts.repl")
