@@ -4,7 +4,7 @@
 
 ; Root namespace
 (load "./kadena/fungible-v2.pact")
-(load "./kadena/fungible-xchain-v1.pact")+
+(load "./kadena/fungible-xchain-v1.pact")
 (load "./kadena/gas-payer-v1.pact")
 (load "./kadena/coin-v5.pact")
 (create-table coin-table)
