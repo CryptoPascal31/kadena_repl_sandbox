@@ -3,6 +3,7 @@
 (env-sigs [])
 
 ; Root namespace
+(load "./kadena/ns.pact")
 (load "./kadena/fungible-v2.pact")
 (load "./kadena/fungible-xchain-v1.pact")
 (load "./kadena/gas-payer-v1.pact")

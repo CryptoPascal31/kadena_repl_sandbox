@@ -10,7 +10,8 @@
           "]")))
 )
 
-(let ((mod-list:[string] ["coin",
+(let ((mod-list:[string] ["ns",
+                          "coin",
                           "util.fungible-util",
                           "util.guards",
                           "util.guards1",
