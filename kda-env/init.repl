@@ -1,4 +1,4 @@
-(enforce-pact-version "4.10")
+(enforce-pact-version "4.11")
 
 ;Init basic guard contract (needed to init namespaces)
 (begin-tx)

@@ -6,7 +6,7 @@
 (load "./kadena/fungible-v2.pact")
 (load "./kadena/fungible-xchain-v1.pact")
 (load "./kadena/gas-payer-v1.pact")
-(load "./kadena/coin-v5.pact")
+(load "./kadena/coin-v6.pact")
 (create-table coin-table)
 
 ; On the Kadena blockchain the guards modules are loaded
