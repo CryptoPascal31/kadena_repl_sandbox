@@ -1,0 +1,32 @@
+; Note:
+;
+; This module should be adaptable for other fungible contracts based on coin.
+;   - Change coin to the relevant module name in several place
+;   - Change the table: (line 27) (here coin-table) to the table name used by the targetted module
+
+(env-enable-repl-natives true)
+
+(module repl-coin-tools GOV
+  (defcap GOV () true)
+
+  (defun fund-account (account-name:string key:string amount:decimal)
+    @doc "Fund a coin account from nothing"
+    (env-data { "k": [key]})
+    (coin.create-account account-name (read-keyset 'k))
+    (set-balance account-name amount)
+  )
+
+  (defun fund-accounts (account-names:[string] amount:decimal)
+    @doc "Fund a list of fungible accounts with a constant amount. the key is derived from the account name"
+    (map (lambda (x) (fund-account x (+ x "-key") amount)) account-names)
+  )
+
+  (defun set-balance (account-name:string amount:decimal)
+    @doc "Set the balance of a fungible account"
+    (env-module-admin coin)
+    (update coin.coin-table account-name {'balance:amount})
+  )
+
+)
+
+(env-enable-repl-natives false)

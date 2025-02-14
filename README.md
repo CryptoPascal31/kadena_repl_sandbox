@@ -43,7 +43,10 @@ Based on Pact 4.11.0, and currently on-chains contracts (12/03/2024)
 **basic-guards**: Implements two simple guards (used to initialize the namespaces):
  GUARD_SUCCESS and GUARD_FAILURE
 
-**repl-coin-tools**: Implements 2 functions to create and mint coin accounts.`(env-enable-repl-natives)` must be enabled to make this module work.
+**repl-coin-tools**: Implements some utility functions to "cheat" the coin module and create test accounts.
+   - ```(fund-account account-name:string key:string amount:decimal)``` : Create and fund a coin account
+   - ```(set-balance account-name:string amount:decimal)``` : Set the balance of a coin account
+  - ``` (fund-accounts account-names:[string] amount:decimal)``` : Create and fund a list of accounts by auto-creating key-names
 
 ### Namespaces
 The following namespaces are created:
