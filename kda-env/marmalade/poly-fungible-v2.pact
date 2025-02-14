@@ -1,5 +1,3 @@
-(enforce-pact-version "3.7")
-
 (namespace 'kip)
 
 (interface poly-fungible-v2

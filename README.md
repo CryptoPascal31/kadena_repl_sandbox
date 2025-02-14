@@ -84,6 +84,8 @@ Contracts:
 - ledger in NS `marmalade`
 - 3 default policy contracts in NS `marmalade`
 
+Note: Marmalade V1 appears to being compatible with Pact 5.0. The provided version has been slightly updated to ensure compatibility.
+
 
 ### Pact Util library
 The version 0.9 of unofficial Pact Util library:
