@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.8")
+  (defconst VERSION:string "0.9")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -152,9 +152,9 @@
   (defun med:decimal (x:[decimal])
     "Returns the median of a list: if the length of the list is even return the (n/2 -1)th element"
     (enforce-not-empty x)
-    (let* ((cnt (length x))
-           (mid (/ cnt 2))
-           (index (if (is-even cnt) (- mid 1) mid)))
+    (let ((cnt (length x))
+          (mid (/ cnt 2))
+          (index (if (is-even cnt) (- mid 1) mid)))
       (at index (sort x)))
   )
 
@@ -162,10 +162,10 @@
     "Returns the median of a list: if the length of the list is even return the average of the\
     \(n/2 -1)th and (n/2)th elements"
     (enforce-not-empty x)
-    (let* ((cnt (length x))
-           (mid (/ cnt 2))
-           (mid-1 (- mid 1))
-           (sorted-x (sort x)))
+    (let ((cnt (length x))
+          (mid (/ cnt 2))
+          (mid-1 (- mid 1))
+          (sorted-x (sort x)))
       (if (is-even cnt)
           (/ (+ (at mid sorted-x) (at mid-1 sorted-x)) 2.0)
           (at mid sorted-x)))
@@ -192,15 +192,15 @@
 
     ; First let remove the sign of a and b and order them
     ; a* is the big, *b is the small
-    (let* ((a (abs a)) (b (abs b))
-           (a* (if (< a b) b a))
-           (b* (if (< a b) a b)))
+    (let ((a (abs a)) (b (abs b))
+          (a* (if (< a b) b a))
+          (b* (if (< a b) a b)))
       (if (= b* 0) a* ; If one (or both) of the arguments is 0: return |a|
-          (let* ((max-iterations (ceiling (log GOLDEN-RATIO (dec b*))))
-                 (gcd-inner (lambda (x i) (if (= (at 'b x) 0)
-                                              x
-                                              {'a: (at 'b x), 'b: (mod (at 'a x) (at 'b x))})))
-                 (gcd-result (fold (gcd-inner) {'a:a*, 'b:b*} (enumerate 1 max-iterations))))
+          (let ((max-iterations (ceiling (log GOLDEN-RATIO (dec b*))))
+                (gcd-inner (lambda (x i) (if (= (at 'b x) 0)
+                                             x
+                                             {'a: (at 'b x), 'b: (mod (at 'a x) (at 'b x))})))
+                (gcd-result (fold (gcd-inner) {'a:a*, 'b:b*} (enumerate 1 max-iterations))))
             (enforce (= (at 'b gcd-result) 0) "Euclidean algorithm not finished")
             (at 'a gcd-result))))
   )

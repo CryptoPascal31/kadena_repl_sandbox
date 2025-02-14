@@ -18,7 +18,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.8.1")
+  (defconst VERSION:string "0.9")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -143,25 +143,23 @@
   (defun join:string (separator:string in:[string])
     "Join a list of string with a separator"
     (if (is-empty in) ""
-        (if (is-singleton in) ; Needed as a workaround
-            (first in)        ; of https://github.com/kadena-io/pact/issues/1316
-            (+ (first in) (concat (map (+ separator) (remove-first in))))))
+      (+ (first in) (concat (map (+ separator) (remove-first in)))))
   )
 
   (defun split:[string] (separator:string in:string)
     (if (= 0 (length in))
       [] ;If the string is empty return a zero length list
-      (let* ((sep-pos (search (str-to-list in) separator))
-             (substart (map (+ 1) (insert-first sep-pos -1)))
-             (sublen  (zip (-) (append-last sep-pos 10000000) substart))
-             (cut (lambda (start len) (take len (drop start in)))))
+      (let ((sep-pos (search (str-to-list in) separator))
+            (substart (map (+ 1) (insert-first sep-pos -1)))
+            (sublen  (zip (-) (append-last sep-pos 10000000) substart))
+            (cut (lambda (start len) (take len (drop start in)))))
         (zip (cut) substart sublen)))
   )
 
   (defun split-chunks:[string] (chunk-size:integer in:string)
     "Split a string in chunks of size chunk-size"
-    (let* ((in-len (length in))
-           (out-len (+  (/ in-len chunk-size)
+    (let ((in-len (length in))
+          (out-len (+  (/ in-len chunk-size)
                         (if (!= 0 (mod in-len chunk-size)) 1 0)))
            (take-chunk (lambda (x) (take chunk-size (drop (* x chunk-size) in)))))
       (if (= 0 out-len)
@@ -225,16 +223,16 @@
 
   (defun str-to-decimal:decimal (in:string)
     "Convert a string to a decimal"
-    (let* ((is-negative (= "-" (take 1 in)))
-           (in (if is-negative (drop 1 in) in))
-           (parts (split "." in)))
+    (let ((is-negative (= "-" (take 1 in)))
+          (in (if is-negative (drop 1 in) in))
+          (parts (split "." in)))
       (enforce (or? (is-singleton) (is-pair) parts) "Invalid format")
-      (let* ((int-part (first parts))
-             (dec-part (if (is-pair parts) (last parts) "0"))
-             (precision (if (is-pair parts) (length dec-part) 0))
-             (dec-multiplier (^ 0.1 (dec precision)))
-             (str-to-dint (lambda (x) (dec (str-to-int 10 x))))
-             (val (+ (str-to-dint int-part) (* dec-multiplier (str-to-dint dec-part)))))
+      (let ((int-part (first parts))
+            (dec-part (if (is-pair parts) (last parts) "0"))
+            (precision (if (is-pair parts) (length dec-part) 0))
+            (dec-multiplier (^ 0.1 (dec precision)))
+            (str-to-dint (lambda (x) (dec (str-to-int 10 x))))
+            (val (+ (str-to-dint int-part) (* dec-multiplier (str-to-dint dec-part)))))
         (round (if is-negative (- val) val) precision)))
   )
 )

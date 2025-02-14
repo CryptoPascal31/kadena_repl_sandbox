@@ -19,7 +19,7 @@
   ;  - https://github.com/kadena-io/pact/blob/master/tests/pact/pairing.repl
   ;  - https://github.com/iden3/snarkjs/blob/master/templates/verifier_groth16.sol.ejs
 
-  (defconst VERSION:string "0.8")
+  (defconst VERSION:string "0.9")
 
   (use util-strings [split-chunks])
   (use util-lists [remove-first first])
@@ -115,8 +115,8 @@
       (enforce (= (++ (length pub-inputs )) (length ic)) "Bad number of inputs")
       (bind proof {'A:=A, 'B:=B, 'C:=C}
         ; Compute The linear combinations of inputs and IC
-        (let* ((vk_0 (point-add 'g1 NULL-POINT-G1 (first ic)))
-               (vk_n (fold (point-add 'g1) vk_0 (zip (scalar-mult 'g1) (remove-first ic) pub-inputs))))
+        (let ((vk_0 (point-add 'g1 NULL-POINT-G1 (first ic)))
+              (vk_n (fold (point-add 'g1) vk_0 (zip (scalar-mult 'g1) (remove-first ic) pub-inputs))))
           (pairing-check [(neg-G1 A)  alpha  vk_n   C]
                          [B           beta   gamma  delta]))))
   )

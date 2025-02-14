@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.8")
+  (defconst VERSION:string "0.9")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -112,8 +112,8 @@
 
   (defun est-height-at-time:integer (target-time:time)
     "Estimates the block height at a target-time"
-    (let* ((delta (diff-time target-time (now)))
-           (est-block (+ (block-height) (round (/ delta BLOCK-TIME)))))
+    (let ((delta (diff-time target-time (now)))
+          (est-block (+ (block-height) (round (/ delta BLOCK-TIME)))))
       (if (> est-block 0 ) est-block 0))
   )
 
