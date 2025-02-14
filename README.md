@@ -71,7 +71,7 @@ The followings accounts are pre-funded for test purpose:
 | carol   | carol-key | 1000.0   |
 | dave    | dave-key  | 1000.0   |
 
-If you need more accounts, you can create a new ones with `(repl-coin-tools.fund-account name key-name balance)`
+If you need more accounts, you can create new ones with `(repl-coin-tools.fund-account name key-name balance)`
 
 
 ### Marmalade
