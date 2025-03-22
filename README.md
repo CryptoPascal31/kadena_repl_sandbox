@@ -88,9 +88,9 @@ Note: Marmalade V1 appears to being compatible with Pact 5.0. The provided versi
 
 
 ### Pact Util library
-The version 0.9 of unofficial Pact Util library:
+The version 0.10 of unofficial Pact Util library:
 - https://github.com/CryptoPascal31/pact-util-lib
-- https://pact-util-lib.readthedocs.io/en/beta_0.9/
+- https://pact-util-lib.readthedocs.io/en/beta_0.10/
 
 ### Disabling features (optional)
 If you don't need to load some features, you can disable them.

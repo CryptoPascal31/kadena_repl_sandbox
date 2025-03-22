@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.9")
+  (defconst VERSION:string "0.10")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -222,6 +222,31 @@
   (defun dec*:decimal(x)
     "Convert an integer or decimal to decimal"
     (if (= (typeof x) "decimal") x (dec x)))
+
+  ;;; Rounding helpers
+  (defun round* (decimals:integer x:decimal)
+    "Reversed round function"
+    (round x decimals))
+
+  (defun floor* (decimals:integer x:decimal)
+    "Reversed floor function"
+    (floor x decimals))
+
+  (defun ceiling* (decimals:integer x:decimal)
+    "Reversed ceiling function"
+    (ceiling x decimals))
+
+  (defun /-r (decimals:integer x:decimal y:decimal)
+    "Rounded division"
+    (round (/ x y) decimals))
+
+  (defun /-f (decimals:integer x:decimal y:decimal)
+    "Floored division"
+    (floor (/ x y) decimals))
+
+  (defun /-c (decimals:integer x:decimal y:decimal)
+    "Ceiled division"
+    (ceiling (/ x y) decimals))
 
   ;;; Log functions
   (defun log10:decimal (x)

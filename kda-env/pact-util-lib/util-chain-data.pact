@@ -17,7 +17,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.9")
+  (defconst VERSION:string "0.10")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
