@@ -28,7 +28,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.9")
+  (defconst VERSION:string "0.11")
 
   (bless "RBfxKPExaz5q6i64FLA_k7UVM9MaOO0UDJulfPFZBRA")
   (bless "I-yq-JDWu9Lpag6SJgkWbDtsaZ21k4YqOyA09uzSnuY")
@@ -39,6 +39,7 @@
   (bless "SVQVrKpSIj-1qBY3SxceeG_3GkODAIYdzszYa44yPe4")
   (bless "0C6T81mWS7QBA7nPBvaJLeO0ExPMwbVg20eKTNQ2DhU")
   (bless "wKB0nWJ-ti1LLUGR07zlZIs7_0g6PkCalRwK3pmaRmc")
+  (bless "ZDYrboWZoGy1yX4rCNOW8H5ZyzK69zIiyD1qoOgvF5M")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -119,7 +120,7 @@
           (assign-order (lambda (x i) {'order:i, 'val:x })))
       (map (at 'val)
            (sort ['order]
-                 (zip (assign-order) in (map (hash) indexes)))))
+                 (zip assign-order in (map (hash) indexes)))))
   )
 
   (defun gen-uuid-rfc-4122-v4:string ()

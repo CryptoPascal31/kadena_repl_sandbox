@@ -15,7 +15,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.10")
+  (defconst VERSION:string "0.11")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -40,13 +40,21 @@
     "Return true if the list is a pair"
     (= 2 (length x)))
 
+  (defun is-length:bool (target:integer x:list)
+    "Returns true if the list has the targetted length"
+    (= target (length x)))
+
   (defun enforce-list-bounds:bool (x:list idx:integer)
     "Verify and ENFORCES that idx is in list bounds"
     (enforce (and? (<= 0) (> (length x)) idx) "Index out of bounds"))
 
   (defun chain:list (in:list)
     "Chain list of lists"
-    (fold (+) [] in))
+    (fold + [] in))
+
+  (defun same-length:bool (x:list y:list)
+    "Return true if two lists have the same length"
+    (= (length x) (length y)))
 
   (defschema list-enum
     "Object returned by enumerate-list"
@@ -90,7 +98,7 @@
     (if (contains item in)
         (let ((indexes (enumerate 0 (length in)))
               (match (lambda (v i) (if (= item v) i -1))))
-          (remove-item (zip (match) in indexes) -1))
+          (remove-item (zip match in indexes) -1))
         [])
   )
 

@@ -18,7 +18,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.10")
+  (defconst VERSION:string "0.11")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -55,8 +55,7 @@
 
   (defun str-to-ascii-int:integer (in:string)
     "Convert a string to its integer ASCII representation"
-    (let ((shift-add (lambda (x y) (+ (shift x 8) y))))
-      (fold (shift-add) 0 (decode-ascii in)))
+    (fold (lambda (x y) (+ (shift x 8) y)) 0 (decode-ascii in))
   )
 
   (defun encode-ascii:string (in-list:[integer])
@@ -72,7 +71,7 @@
     (if (!= in 0)
         (let ((len (ceiling (log 256.0 (dec in))))
               (extract-char-value (lambda (idx) (mod (shift in (* -8 idx)) 256))))
-          (encode-ascii (map (extract-char-value) (enumerate (- len 1) 0))))
+          (encode-ascii (map extract-char-value (enumerate (- len 1) 0))))
         "")
   )
 
@@ -100,7 +99,7 @@
     "Returns true if in contains one of the characters in values"
     (let ((values-lists (str-to-list values))
           (contains-char (lambda (x) (contains x in))))
-      (fold (or) false (map (contains-char) values-lists)))
+      (fold (or) false (map contains-char values-lists)))
   )
 
   (defun replace-char:string (in:string old-char:string new-char:string)
@@ -114,7 +113,7 @@
                             (if (and? (<= 97) (>= 122) x)
                                 (- x 32)
                                 x))))
-      (encode-ascii (map (do-upper) (decode-ascii in))))
+      (encode-ascii (map do-upper (decode-ascii in))))
   )
 
   (defun lower:string (in:string)
@@ -123,7 +122,7 @@
                             (if (and? (<= 65) (>= 90) x)
                                 (+ x 32)
                                 x))))
-      (encode-ascii (map (do-lower) (decode-ascii in))))
+      (encode-ascii (map do-lower (decode-ascii in))))
   )
 
   (defun char-at:string (idx:integer in:string)
@@ -151,9 +150,9 @@
       [] ;If the string is empty return a zero length list
       (let ((sep-pos (search (str-to-list in) separator))
             (substart (map (+ 1) (insert-first sep-pos -1)))
-            (sublen  (zip (-) (append-last sep-pos 10000000) substart))
+            (sublen  (zip - (append-last sep-pos 10000000) substart))
             (cut (lambda (start len) (take len (drop start in)))))
-        (zip (cut) substart sublen)))
+        (zip cut substart sublen)))
   )
 
   (defun split-chunks:[string] (chunk-size:integer in:string)
@@ -164,7 +163,7 @@
            (take-chunk (lambda (x) (take chunk-size (drop (* x chunk-size) in)))))
       (if (= 0 out-len)
           []
-          (map (take-chunk) (enumerate 0 (- out-len 1)))))
+          (map take-chunk (enumerate 0 (- out-len 1)))))
   )
 
   (defun starts-with:bool (in:string to-match:string)
