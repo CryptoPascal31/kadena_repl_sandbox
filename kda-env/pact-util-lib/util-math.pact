@@ -14,7 +14,7 @@
    \ Documentation: https://pact-util-lib.readthedocs.io \
    \ Github: https://github.com/CryptoPascal31/pact-util-lib "
 
-  (defconst VERSION:string "0.10")
+  (defconst VERSION:string "0.11")
 
   (defcap GOV()
     (enforce-keyset "free.util-lib"))
@@ -42,7 +42,7 @@
   (defun min-list:decimal (x:[decimal])
     "Returns the min of a list"
     (enforce-not-empty x)
-    (fold (min) (first x) (remove-first x))
+    (fold min (first x) (remove-first x))
   )
 
   (defun amin:integer (in:[decimal])
@@ -50,7 +50,7 @@
     (enforce-not-empty in)
     (let ((in-enum (enumerate-list in))
           (cmp (lambda (x y) (if (< (at 'v x) (at 'v y)) x y))))
-      (at 'i (fold (cmp) (first in-enum) (remove-first in-enum))))
+      (at 'i (fold cmp (first in-enum) (remove-first in-enum))))
   )
 
   (defun max:decimal (x:decimal y:decimal)
@@ -68,7 +68,7 @@
   (defun max-list:decimal (x:[decimal])
     "Returns the max of a list"
     (enforce-not-empty x)
-    (fold (max) (first x) (remove-first x))
+    (fold max (first x) (remove-first x))
   )
 
   (defun amax:integer (in:[decimal])
@@ -76,7 +76,7 @@
     (enforce-not-empty in)
     (let ((in-enum (enumerate-list in))
           (cmp (lambda (x y) (if (> (at 'v x) (at 'v y)) x y))))
-      (at 'i (fold (cmp) (first in-enum) (remove-first in-enum))))
+      (at 'i (fold cmp (first in-enum) (remove-first in-enum))))
   )
 
   (defun clamp:decimal (low-limit:decimal up-limit:decimal x:decimal)
@@ -97,7 +97,7 @@
 
   (defun sum:decimal (x:[decimal])
     "Returns the sum of a list"
-    (fold (+) 0.0 x))
+    (fold + 0.0 x))
 
   (defun prod3:decimal (x:decimal y:decimal z:decimal)
     "Returns the product of 3 values"
@@ -109,7 +109,7 @@
 
   (defun prod:decimal (x:[decimal])
     "Returns the product of a list"
-    (fold (*) 1.0 x))
+    (fold * 1.0 x))
 
   (defun square:decimal (x:decimal)
     "Returns the square of x"
@@ -118,6 +118,11 @@
   (defun safe-/ (x:decimal y:decimal default:decimal)
     "Divide x/y but returns default if y is 0.0"
     (if (= y 0.0) default (/ x y)))
+
+  (defun geom-mean(x:[decimal])
+    "Return the geometric mean of a list"
+    (enforce-not-empty x)
+    (^ (prod x) (/ 1.0 (dec (length x)))))
 
   (defun avg:decimal (x:[decimal])
     "Returns the average of a list"
@@ -175,12 +180,20 @@
     "Returns true is a <= x <= b"
     (and? (<= a) (>= b) x))
 
+  (defun between*:bool (a:decimal b:decimal x:decimal)
+    "Returns true is a < x < b"
+    (and? (< a) (> b) x))
+
   (defun sign:decimal (x:decimal)
     "Returns 1.0 if x is positive, 0.0 if x is null, and -1.0 if x is negative"
     (cond
       ((> x 0.0) 1.0)
       ((< x 0.0) -1.0)
       0.0))
+
+(defun ramp:decimal (x:decimal)
+    "Returns x if is x is positive, 0.0 otherwise"
+    (if (>= x 0.0) x 0.0))
 
 
   (defun gcd:integer (a:integer b:integer)
@@ -200,7 +213,7 @@
                 (gcd-inner (lambda (x i) (if (= (at 'b x) 0)
                                              x
                                              {'a: (at 'b x), 'b: (mod (at 'a x) (at 'b x))})))
-                (gcd-result (fold (gcd-inner) {'a:a*, 'b:b*} (enumerate 1 max-iterations))))
+                (gcd-result (fold gcd-inner {'a:a*, 'b:b*} (enumerate 1 max-iterations))))
             (enforce (= (at 'b gcd-result) 0) "Euclidean algorithm not finished")
             (at 'a gcd-result))))
   )

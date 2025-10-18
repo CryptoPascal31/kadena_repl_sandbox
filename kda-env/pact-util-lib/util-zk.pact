@@ -19,7 +19,7 @@
   ;  - https://github.com/kadena-io/pact/blob/master/tests/pact/pairing.repl
   ;  - https://github.com/iden3/snarkjs/blob/master/templates/verifier_groth16.sol.ejs
 
-  (defconst VERSION:string "0.10")
+  (defconst VERSION:string "0.11")
 
   (use util-strings [split-chunks])
   (use util-lists [remove-first first])
@@ -73,7 +73,7 @@
   (defun serialize-proof:string (proof:object{groth16-proof})
     "Serialiaze an object proof to its base64 representation (344 octets)"
     (bind proof {'A:=A, 'B:=B, 'C:=C}
-      (concat (map (int256-to-b64) [ (at 'x A), (at 'y A),
+      (concat (map int256-to-b64   [ (at 'x A), (at 'y A),
                                      (at 0 (at 'x B)), (at 1 (at 'x B)),
                                      (at 0 (at 'y B)), (at 1 (at 'y B)),
                                      (at 'x C), (at 'y C)
